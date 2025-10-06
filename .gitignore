@@ -1,0 +1,52 @@
+# WordPress
+.DS_Store
+thumbs.db
+
+# WordPress cache files
+*.cache
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Build files
+/vendor/
+composer.lock
+
+# WordPress specific
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup*/
+wp-content/upgrade/
+wp-content/w3tc-config/
+
+# Plugin specific
+*.zip

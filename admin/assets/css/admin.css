@@ -1,0 +1,90 @@
+/**
+ * Admin Styles
+ *
+ * @package ATDW_Live_Products
+ */
+
+/* Dashboard Grid */
+.atdw-dashboard-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+
+/* Cards */
+.atdw-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 20px;
+	margin-bottom: 20px;
+}
+
+.atdw-card h2 {
+	margin-top: 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #eee;
+}
+
+.atdw-card-content {
+	padding-top: 15px;
+}
+
+.atdw-card-full {
+	grid-column: 1 / -1;
+}
+
+/* Status Indicators */
+.atdw-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 10px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.atdw-status-success {
+	background: #d4edda;
+	color: #155724;
+}
+
+.atdw-status-error {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+/* Info Highlight */
+.atdw-info-highlight {
+	font-size: 24px;
+	font-weight: bold;
+	color: #2271b1;
+	margin: 10px 0;
+}
+
+/* Code blocks */
+code {
+	background: #f0f0f1;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 13px;
+}
+
+/* Tables */
+.atdw-card table.widefat {
+	margin-top: 15px;
+}
+
+.atdw-card table.widefat th {
+	font-weight: 600;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+	.atdw-dashboard-grid {
+		grid-template-columns: 1fr;
+	}
+}
