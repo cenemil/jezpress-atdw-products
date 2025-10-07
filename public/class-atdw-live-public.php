@@ -117,6 +117,7 @@ class ATDW_Live_Public {
 				'region'        => '',
 				'location'      => '',
 				'type'          => '',
+				'fl'            => '',  // Field List - subset of data fields to return (comma-separated)
 				'size'          => 12,  // Changed from limit to size, default 12
 				'pge'           => 1,   // Page number for pagination
 				'layout'        => 'grid',
@@ -142,6 +143,7 @@ class ATDW_Live_Public {
 			'data-region'       => esc_attr( $atts['region'] ),
 			'data-location'     => esc_attr( $atts['location'] ),
 			'data-type'         => esc_attr( $atts['type'] ),
+			'data-fl'           => esc_attr( $atts['fl'] ),
 			'data-size'         => absint( $atts['size'] ),
 			'data-pge'          => absint( $atts['pge'] ),
 			'data-layout'       => esc_attr( $atts['layout'] ),

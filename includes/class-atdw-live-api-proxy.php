@@ -265,7 +265,7 @@ class ATDW_Live_API_Proxy {
 			'st', 'area', 'loc', 'ct', 'lat', 'long', 'dist', 'cats', 'cat',
 			'ptype', 'size', 'pge', 'priceMin', 'priceMax', 'productId',
 			'q', 'region', 'category', 'type', 'sort', 'key', 'out', 'mv',
-			'additionalQuery'
+			'additionalQuery', 'fl'
 		);
 
 		foreach ( $params as $key => $value ) {

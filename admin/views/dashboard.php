@@ -74,62 +74,71 @@ $org_number = get_option( 'atdw_live_org_number' );
 			<code>[atdw_live_products]</code>
 
 			<p style="margin-top: 10px;"><?php esc_html_e( 'Filtered by state:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_products st="NSW" size="12" columns="4"]</code>
+			<code>[atdw_live_products st="NSW" size="6"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'Accommodation only:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_products cats="ACCOMM" size="6" columns="3" layout="grid"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With region and columns:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_products st="QLD" region="Gold Coast" columns="4"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'Events and attractions with pagination:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_products cats="EVENT,ATTRACTION" region="Hunter Valley" size="12" pge="1"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'List layout without pagination:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_products type="ACCOMM" layout="list" show_pagination="no"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'No pagination:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_products size="20" show_pagination="no"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With custom view link:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_products st="VIC" cats="Wine" size="12" view_slug="listing"]</code>
+
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With specific fields only (reduced response):', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_products fl="productName,productImage,productDescription" st="NSW" size="10"]</code>
 
 			<h3 style="margin-top: 20px;"><?php esc_html_e( 'Display Single Product', 'atdw-live-products' ); ?></h3>
 			<code>[atdw_live_product id="56b23f7e57010b977310e2ba"]</code>
 			<p class="description"><?php esc_html_e( 'Replace with actual ATDW product ID', 'atdw-live-products' ); ?></p>
 
 			<h3 style="margin-top: 20px;"><?php esc_html_e( 'Search Form', 'atdw-live-products' ); ?></h3>
-			<p><?php esc_html_e( 'Basic search:', 'atdw-live-products' ); ?></p>
+			<p><?php esc_html_e( 'Basic search (default filters):', 'atdw-live-products' ); ?></p>
 			<code>[atdw_live_search]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'With custom city options:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_search ct="sydney,melbourne,brisbane" show_suburb="yes"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With specific cities:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_search ct="Dungog,Clarence Town,Stroud"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'Single city option with custom placeholder:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_search ct="dungog" placeholder="Search Dungog attractions"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With custom placeholder:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_search placeholder="Search tourism attractions" ct="Dungog"]</code>
 
 			<p style="margin-top: 10px;"><?php esc_html_e( 'Custom sort options:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_search sort="date,asc,desc" show_sort="yes"]</code>
+			<code>[atdw_live_search sort="date,asc,desc,random"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'Sort with price options:', 'atdw-live-products' ); ?></p>
-			<code>[atdw_live_search sort="date,price_asc,price_desc,asc" show_sort="yes"]</code>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'With product type filtering:', 'atdw-live-products' ); ?></p>
+			<code>[atdw_live_search type="ACCOMM" show_types="yes"]</code>
 
-			<p style="margin-top: 10px;"><?php esc_html_e( 'Minimal search (keyword only):', 'atdw-live-products' ); ?></p>
+			<p style="margin-top: 10px;"><?php esc_html_e( 'Minimal (keyword only):', 'atdw-live-products' ); ?></p>
 			<code>[atdw_live_search show_suburb="no" show_sort="no" show_types="no"]</code>
 
 			<h3 style="margin-top: 20px;"><?php esc_html_e( 'Available Parameters', 'atdw-live-products' ); ?></h3>
-			<h4><?php esc_html_e( 'Product Display:', 'atdw-live-products' ); ?></h4>
+			<h4><?php esc_html_e( 'Product Grid ([atdw_live_products]):', 'atdw-live-products' ); ?></h4>
 			<ul style="margin-left: 20px;">
-				<li><strong>st</strong> - NSW, VIC, QLD, SA, WA, TAS, NT, ACT (state code)</li>
-				<li><strong>cats</strong> - ACCOMM, ATTRACTION, EVENT, TOUR, TRANSPORT, HIRE, FOOD, INFO</li>
-				<li><strong>region</strong> - Specific region name</li>
+				<li><strong>st</strong> - State code (NSW, VIC, QLD, SA, WA, TAS, NT, ACT)</li>
+				<li><strong>cats</strong> - Category filter (comma-separated)</li>
+				<li><strong>region</strong> - Region/area name</li>
+				<li><strong>location</strong> - Location filter</li>
+				<li><strong>type</strong> - Product type filter</li>
+				<li><strong>fl</strong> - Field List - specify which fields to return from API response (comma-separated, e.g., "productName,productImage,productDescription"). Reduces response size for better performance</li>
 				<li><strong>size</strong> - Number of products per page (default: 12)</li>
 				<li><strong>pge</strong> - Page number for pagination (default: 1)</li>
-				<li><strong>columns</strong> - 2, 3, or 4 (default: 3)</li>
 				<li><strong>layout</strong> - grid or list (default: grid)</li>
+				<li><strong>columns</strong> - 2, 3, or 4 (default: 3)</li>
 				<li><strong>show_image</strong> - yes or no (default: yes)</li>
 				<li><strong>show_excerpt</strong> - yes or no (default: yes)</li>
 				<li><strong>show_pagination</strong> - yes or no (default: yes)</li>
+				<li><strong>view_label</strong> - Button text (default: "View Details")</li>
+				<li><strong>view_slug</strong> - Single product page slug (default: "detail")</li>
 			</ul>
-			<h4 style="margin-top: 15px;"><?php esc_html_e( 'Search Form:', 'atdw-live-products' ); ?></h4>
+			<h4 style="margin-top: 15px;"><?php esc_html_e( 'Search Form ([atdw_live_search]):', 'atdw-live-products' ); ?></h4>
 			<ul style="margin-left: 20px;">
-				<li><strong>placeholder</strong> - Custom placeholder text for search input (default: "Search keyword")</li>
-				<li><strong>ct</strong> - Comma-separated city options for dropdown (e.g., "sydney,melbourne,brisbane"). If empty, no dropdown shown.</li>
-				<li><strong>sort</strong> - Comma-separated sort options: date, asc (A-Z), desc (Z-A), price_asc, price_desc, drt, random. If empty, shows default options (no price sorting).</li>
-				<li><strong>show_suburb</strong> - Show suburb/city dropdown (default: yes, only shows if ct has values)</li>
-				<li><strong>show_sort</strong> - Show sort options (default: yes, only shows if sort has values)</li>
-				<li><strong>show_types</strong> - Show type selection toggle (default: yes)</li>
+				<li><strong>ct</strong> - Comma-separated city/suburb options (e.g., "Dungog,Stroud"). If empty, no dropdown shown</li>
+				<li><strong>sort</strong> - Comma-separated sort options: date, asc, desc, price_asc, price_desc, drt, random. If empty, shows default options</li>
+				<li><strong>type</strong> - Product type/category to filter (used for loading type checkboxes)</li>
+				<li><strong>placeholder</strong> - Search input placeholder (default: "Search keyword")</li>
+				<li><strong>show_suburb</strong> - Show suburb/city dropdown: yes or no (default: yes)</li>
+				<li><strong>show_sort</strong> - Show sort dropdown: yes or no (default: yes)</li>
+				<li><strong>show_types</strong> - Show type checkboxes: yes or no (default: yes)</li>
 				<li><strong>columns</strong> - Results grid columns: 2, 3, or 4 (default: 3)</li>
 			</ul>
 		</div>

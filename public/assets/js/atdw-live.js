@@ -40,7 +40,8 @@
 					cats: $container.data('cats') || '',
 					area: $container.data('region') || '',
 					ptype: $container.data('type') || '',
-					loc: $container.data('location') || ''
+					loc: $container.data('location') || '',
+					fl: $container.data('fl') || ''
 				});
 
 				// Set current page
@@ -298,6 +299,13 @@
 
 					html += '<div class="atdw-product-image">';
 					html += '<img src="' + this.escapeHtml(imageUrl) + '" alt="' + this.escapeHtml(product.productName || '') + '" loading="lazy" />';
+
+					// Add price overlay if rate_from exists
+					if (product.rate_from || product.rateFrom) {
+						var price = product.rate_from || product.rateFrom;
+						html += '<div class="atdw-product-price">$' + this.escapeHtml(price) + '</div>';
+					}
+
 					html += '</div>';
 				}
 			}
@@ -535,6 +543,7 @@
 			if (containerParams.area) params.area = containerParams.area;
 			if (containerParams.ptype) params.ptype = containerParams.ptype;
 			if (containerParams.loc) params.loc = containerParams.loc;
+			if (containerParams.fl) params.fl = containerParams.fl;
 
 			// Use container's size or default to 20
 			params.size = parseInt(containerParams.size) || 20;
@@ -603,16 +612,23 @@
 						// displayProducts will respect container's layout, columns, show-image, show-excerpt settings
 						ATDWLive.displayProducts(response.data, $targetContainer);
 
-						// Update pagination if enabled - search results start at page 1
+						// For search results, replace pagination with search-specific pagination
 						if ($targetContainer.data('show-pagination') === 'yes') {
 							var products = response.data.products || response.data.product || [];
 							if (!Array.isArray(products)) {
 								products = [products];
 							}
+
+							// Store search params for pagination
+							$targetContainer.data('search-params', params);
+							$targetContainer.data('is-search-result', true);
+							$targetContainer.data('search-current-page', 1);
+
 							// Check if there are more results
 							var hasMore = products.length >= params.size;
-							$targetContainer.data('current-page', 1);
-							ATDWLive.updatePaginationDisplay($targetContainer, hasMore);
+
+							// Update pagination for search results
+							ATDWLive.updateSearchPagination($targetContainer, 1, hasMore, params.size);
 						}
 					} else {
 						var errorMsg = response.data && response.data.message ? response.data.message : atdwLive.strings.error;
@@ -637,17 +653,30 @@
 
 			// Previous page button
 			$prevBtn.on('click', function() {
-				var currentPage = parseInt($container.data('current-page')) || 1;
-				if (currentPage > 1) {
-					ATDWLive.loadPage($container, currentPage - 1);
+				// Check if this is a search result
+				if ($container.data('is-search-result')) {
+					var currentPage = parseInt($container.data('search-current-page')) || 1;
+					if (currentPage > 1) {
+						ATDWLive.loadSearchPage($container, currentPage - 1);
+					}
+				} else {
+					var currentPage = parseInt($container.data('current-page')) || 1;
+					if (currentPage > 1) {
+						ATDWLive.loadPage($container, currentPage - 1);
+					}
 				}
 			});
 
 			// Next page button
 			$nextBtn.on('click', function() {
-				var currentPage = parseInt($container.data('current-page')) || 1;
-				// We'll update total pages after each API response
-				ATDWLive.loadPage($container, currentPage + 1);
+				// Check if this is a search result
+				if ($container.data('is-search-result')) {
+					var currentPage = parseInt($container.data('search-current-page')) || 1;
+					ATDWLive.loadSearchPage($container, currentPage + 1);
+				} else {
+					var currentPage = parseInt($container.data('current-page')) || 1;
+					ATDWLive.loadPage($container, currentPage + 1);
+				}
 			});
 		},
 
@@ -664,6 +693,7 @@
 			if (params.area) apiParams.area = params.area;
 			if (params.ptype) apiParams.ptype = params.ptype;
 			if (params.loc) apiParams.loc = params.loc;
+			if (params.fl) apiParams.fl = params.fl;
 
 			// Add pagination parameters - using ATDW API format
 			apiParams.size = parseInt(params.size) || 12;  // Dynamic size from shortcode
@@ -775,6 +805,102 @@
 				$pagination.hide();
 			} else {
 				// Otherwise show pagination
+				$pagination.show();
+			}
+		},
+
+		/**
+		 * Load search results page
+		 */
+		loadSearchPage: function($container, page) {
+			var searchParams = $container.data('search-params');
+			if (!searchParams) {
+				console.error('No search params found');
+				return;
+			}
+
+			// Update page number in search params
+			searchParams.pge = parseInt(page) || 1;
+
+			var $loading = $container.find('.atdw-live-loading');
+			var $products = $container.find('.atdw-live-products');
+			var $error = $container.find('.atdw-live-error');
+
+			$loading.show();
+			$products.empty();
+			$error.hide();
+
+			// Fetch products with search params
+			$.ajax({
+				url: atdwLive.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'atdw_live_fetch',
+					nonce: atdwLive.nonce,
+					endpoint: '/products',
+					params: searchParams
+				},
+				success: function(response) {
+					$loading.hide();
+
+					if (response.success && response.data) {
+						ATDWLive.displayProducts(response.data, $container);
+
+						var products = response.data.products || response.data.product || [];
+						if (!Array.isArray(products)) {
+							products = [products];
+						}
+
+						// Update current page
+						$container.data('search-current-page', page);
+
+						// Check if there are more results
+						var hasMore = products.length >= searchParams.size;
+
+						// Update pagination
+						ATDWLive.updateSearchPagination($container, page, hasMore, searchParams.size);
+					} else {
+						var errorMsg = response.data && response.data.message ? response.data.message : atdwLive.strings.error;
+						$error.find('p').text(errorMsg);
+						$error.show();
+						$container.find('.atdw-results-count').hide();
+					}
+				},
+				error: function(xhr, status, error) {
+					$loading.hide();
+					$error.show();
+					console.error('AJAX Error:', status, error);
+				}
+			});
+		},
+
+		/**
+		 * Update pagination for search results
+		 */
+		updateSearchPagination: function($container, currentPage, hasMore, pageSize) {
+			var $pagination = $container.find('.atdw-pagination');
+			var $prevBtn = $pagination.find('.atdw-prev-page');
+			var $nextBtn = $pagination.find('.atdw-next-page');
+			var $currentPage = $pagination.find('.atdw-current-page');
+			var $pageSeparator = $pagination.find('.atdw-page-separator');
+			var $totalPages = $pagination.find('.atdw-total-pages');
+
+			// Update current page display
+			$currentPage.text(currentPage);
+
+			// Hide "of X" text since we don't know total pages
+			$pageSeparator.hide();
+			$totalPages.hide();
+
+			// Enable/disable buttons
+			$prevBtn.prop('disabled', currentPage <= 1);
+			$nextBtn.prop('disabled', !hasMore);
+
+			// Always show pagination for search results if there's more than one page
+			if (currentPage === 1 && !hasMore) {
+				// Only one page of results
+				$pagination.hide();
+			} else {
 				$pagination.show();
 			}
 		},

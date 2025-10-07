@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: ATDW Live Products
- * Plugin URI: https://github.com/yourusername/atdw-live-products
+ * Plugin URI: https://github.com/cenemil/atdw-live-products
  * Description: Display Australian tourism products from ATDW API using real-time JavaScript fetching (no database sync)
- * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yourwebsite.com
+ * Version: 1.1.0
+ * Author: Jezweb
+ * Author URI: https://www.jezweb.com.au
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: atdw-live-products
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ATDW_LIVE_VERSION', '1.0.0' );
+define( 'ATDW_LIVE_VERSION', '1.1.0' );
 define( 'ATDW_LIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );

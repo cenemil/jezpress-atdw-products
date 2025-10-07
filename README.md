@@ -29,7 +29,6 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 ### Core Functionality
 - **Real-time Fetching**: Data fetched directly from ATDW API via JavaScript
 - **Server-side Proxy**: AJAX proxy to avoid CORS issues
-- **Smart Caching**: Optional server-side caching for improved performance
 - **API Error Logging**: Track and monitor API errors
 - **Easy Configuration**: Simple settings interface
 
@@ -43,7 +42,6 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - **Dashboard**: Quick overview of plugin status
 - **Settings Panel**: Configure API credentials and options
 - **Error Logging**: View and troubleshoot API errors
-- **Cache Management**: Clear cache when needed
 
 ## Requirements
 
@@ -68,13 +66,10 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 2. Enter your ATDW API Key
 3. Configure the following options:
    - **API Base URL**: Default is `https://atlas.atdw-online.com.au/api/atlas`
+   - **Organisation Name**: Your organisation name (optional)
+   - **Organisation Number**: Filter products by organisation number (optional)
    - **Market Variant**: Choose language (English, Chinese Simplified, Chinese Traditional)
    - **Output Format**: JSON (recommended) or XML
-
-### Cache Settings
-
-- **Enable Cache**: Toggle server-side caching on/off
-- **Cache TTL**: Set cache lifetime in seconds (default: 3600)
 
 ## Usage
 
@@ -86,32 +81,40 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 ```
 
 **Attributes:**
-- `state` - Filter by state code (e.g., NSW, VIC, QLD)
-- `category` - Filter by category ID or name
+- `st` - Filter by state code (e.g., NSW, VIC, QLD)
+- `cats` - Filter by category ID or name
 - `region` - Filter by region/area
 - `location` - Filter by location
 - `type` - Filter by product type
-- `limit` - Number of products to display (default: 10)
+- `fl` - Field List - specify which data fields to return from API (comma-separated, reduces response size)
+- `size` - Number of products to display (default: 12)
+- `pge` - Page number for pagination (default: 1)
 - `layout` - Layout type: grid or list (default: grid)
 - `columns` - Number of columns: 2, 3, or 4 (default: 3)
 - `show_image` - Show images: yes or no (default: yes)
 - `show_excerpt` - Show excerpt: yes or no (default: yes)
+- `show_pagination` - Show pagination controls: yes or no (default: yes)
+- `view_label` - Button label (default: "View Details")
+- `view_slug` - Single product page slug (default: "detail")
 
 **Examples:**
 ```
-[atdw_live_products state="NSW" limit="6"]
-[atdw_live_products state="QLD" region="Gold Coast" columns="4"]
-[atdw_live_products type="ACCOMM" layout="list"]
-[atdw_live_products state="VIC" category="Wine" limit="12"]
+[atdw_live_products st="NSW" size="6"]
+[atdw_live_products st="QLD" region="Gold Coast" columns="4"]
+[atdw_live_products type="ACCOMM" layout="list" show_pagination="no"]
+[atdw_live_products st="VIC" cats="Wine" size="12" view_slug="listing"]
+[atdw_live_products fl="productName,productImage,productDescription" st="NSW" size="10"]
 ```
 
 **ATDW API Parameters Used:**
-- `st` - State code (from `state` attribute)
-- `cats` - Categories (from `category` attribute)
+- `st` - State code (from `st` attribute)
+- `cats` - Categories (from `cats` attribute)
 - `area` - Area/region (from `region` attribute)
 - `loc` - Location (from `location` attribute)
 - `ptype` - Product type (from `type` attribute)
-- `size` - Result limit (from `limit` attribute)
+- `fl` - Field List - subset of response fields (from `fl` attribute)
+- `size` - Result limit (from `size` attribute)
+- `pge` - Page number (from `pge` attribute)
 
 #### Display Single Product
 ```
@@ -127,9 +130,13 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 ```
 
 **Attributes:**
-- `show_categories` - Show category filter: yes or no (default: yes)
-- `show_regions` - Show region filter: yes or no (default: yes)
-- `show_types` - Show type filter: yes or no (default: yes)
+- `ct` - Pre-filter cities/suburbs (comma-separated)
+- `sort` - Sort options to display (comma-separated: date, asc, desc, price_asc, price_desc, drt, random)
+- `type` - Product types/categories to filter by (comma-separated)
+- `placeholder` - Search input placeholder text
+- `show_suburb` - Show suburb/city filter: yes or no (default: yes)
+- `show_sort` - Show sort filter: yes or no (default: yes)
+- `show_types` - Show type checkboxes: yes or no (default: yes)
 - `columns` - Number of columns for results: 2, 3, or 4 (default: 3)
 
 ## How It Works
@@ -138,23 +145,22 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 
 1. **Shortcode Rendering**: When a shortcode is added to a page, the plugin renders a container with data attributes
 2. **JavaScript Initialization**: On page load, JavaScript detects containers and prepares requests
-3. **AJAX Proxy Request**: JavaScript sends AJAX request to WordPress with API parameters (e.g., st=NSW, size=10)
+3. **AJAX Proxy Request**: JavaScript sends AJAX request to WordPress with API parameters (e.g., st=NSW, size=12)
 4. **Server-side Proxy**: PHP proxy validates request and forwards to ATDW API with proper query parameters
-5. **Cache Check**: If caching is enabled, checks for cached response based on full URL
-6. **API Request**: Makes HTTP request to ATDW API: `https://atlas.atdw-online.com.au/api/atlas/products?key=YOUR_KEY&st=NSW&out=json&mv=ENGLISH`
-7. **Response Handling**: Returns JSON data to JavaScript
-8. **DOM Rendering**: JavaScript renders products dynamically in the DOM
+5. **API Request**: Makes HTTP request to ATDW API: `https://atlas.atdw-online.com.au/api/atlas/products?key=YOUR_KEY&st=NSW&out=json&mv=ENGLISH`
+6. **Response Handling**: Returns JSON data to JavaScript
+7. **DOM Rendering**: JavaScript renders products dynamically in the DOM
 
 ### Data Flow
 
 ```
 User Browser → WordPress AJAX → PHP Proxy → ATDW API
-                    ↓                ↓
-                Cache Check    API Response
-                    ↓                ↓
-            JavaScript ← JSON Data ←┘
-                    ↓
-            Render Products
+                                                ↓
+                                          API Response
+                                                ↓
+                      JavaScript ← JSON Data ←┘
+                            ↓
+                    Render Products
 ```
 
 ## API Endpoints Used
@@ -171,16 +177,11 @@ The plugin can access the following ATDW API endpoints through the proxy:
 
 ## Performance Optimization
 
-### Caching
-- Enable server-side caching in settings
-- Adjust cache TTL based on data update frequency
-- Clear cache when needed from dashboard
-
 ### Best Practices
-- Use reasonable `limit` values in shortcodes
-- Enable caching for production sites
-- Use specific filters to reduce API response size
+- Use reasonable `size` values in shortcodes to avoid overloading the API
+- Use specific filters (st, cats, region, etc.) to reduce API response size
 - Consider using a CDN for plugin assets
+- Enable page caching on your WordPress site (doesn't affect real-time data)
 
 ## Troubleshooting
 
@@ -194,13 +195,13 @@ The plugin can access the following ATDW API endpoints through the proxy:
 1. Check browser console for JavaScript errors
 2. Verify shortcode syntax is correct
 3. Test API connection from dashboard
-4. Clear cache and try again
+4. Check error logs in **ATDW Live > Logs**
 
 ### Performance Issues
-1. Enable caching in settings
-2. Reduce number of products displayed
-3. Use specific filters to narrow results
-4. Check for JavaScript conflicts with other plugins
+1. Reduce number of products displayed (use `size` attribute)
+2. Use specific filters to narrow results
+3. Check for JavaScript conflicts with other plugins
+4. Ensure your API key has proper access permissions
 
 ## Security
 
@@ -211,8 +212,8 @@ The plugin can access the following ATDW API endpoints through the proxy:
 
 ### API Key Protection
 - API key stored securely in database
-- Never exposed to frontend JavaScript
-- Only accessible through server-side proxy
+- Accessible only to authenticated admin users
+- All API requests proxied through WordPress backend
 
 ## Browser Compatibility
 
@@ -226,15 +227,15 @@ The plugin can access the following ATDW API endpoints through the proxy:
 
 ### Compared to Sync-Based Plugins
 - Requires JavaScript enabled in browser
-- Initial page load may be slightly slower
+- API requests made on each page load (no local caching)
 - Cannot query products using WordPress queries
-- Not suitable for very large product catalogs (1000+)
+- Not suitable for very large product catalogs without filtering
 
 ### Best Use Cases
-- Small to medium product catalogs
-- Sites requiring real-time data
-- Low-traffic websites
-- Sites without cron access
+- Organisations displaying their own products (using Organisation Number filter)
+- Sites requiring always up-to-date data
+- Simple tourism listing pages
+- Sites with specific filtering needs (by region, category, etc.)
 
 ## Developer Information
 
@@ -287,20 +288,28 @@ jQuery(document).ready(function($) {
 ## Support
 
 For issues, questions, or contributions:
-- GitHub: [Your Repository URL]
-- Documentation: [Your Documentation URL]
-- Support Email: [Your Support Email]
+- GitHub: https://github.com/cenemil/atdw-live-products
+- Website: https://www.jezweb.com.au
 
 ## Changelog
 
+### Version 1.1.0
+- Added `fl` (Field List) parameter to control API response fields
+- Added price overlay display on product images (from `rate_from` field)
+- Improved search result pagination - separate from regular pagination
+- Search pagination now preserves all search filters across pages
+- Enhanced pagination controls for search vs regular product listing
+- Bug fixes and performance improvements
+
 ### Version 1.0.0
 - Initial release
-- Real-time JavaScript fetching
-- Server-side AJAX proxy
-- Shortcodes for display
-- Admin dashboard
-- Cache management
-- Error logging
+- Real-time JavaScript fetching via AJAX proxy
+- Three shortcodes: products grid, single product, search form
+- Organisation number filtering support
+- Pagination with ATDW API `pge` parameter
+- Advanced search with keyword, suburb, sort, and type filters
+- Admin dashboard with settings and error logging
+- Responsive design with mobile support
 
 ## License
 
@@ -308,7 +317,7 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Credits
 
-- Developed by [Your Name]
+- Developed by Jezweb (https://www.jezweb.com.au)
 - ATDW API by Australian Tourism Data Warehouse
 
 ## Frequently Asked Questions
@@ -339,10 +348,13 @@ Use **ATDW Tourism Products** if:
 Yes, since the data is fetched client-side, page caching will not affect the product display.
 
 ### Can I customize the product display?
-Yes, you can override the styles with custom CSS in your theme.
+Yes, you can override the styles with custom CSS in your theme, or use the Custom CSS field in the plugin settings.
 
 ### How often is the data updated?
-Data is fetched in real-time from the ATDW API. Optional server-side caching can cache responses based on your TTL setting.
+Data is fetched in real-time from the ATDW API on every page load, ensuring you always display the most current information.
+
+### Can I filter by my organisation only?
+Yes, enter your Organisation Number in the plugin settings to automatically filter all products to show only those owned by your organisation.
 
 ---
 
