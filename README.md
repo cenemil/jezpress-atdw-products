@@ -89,6 +89,7 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - `fl` - Field List - specify which data fields to return from API (comma-separated, reduces response size)
 - `size` - Number of products to display (default: 12)
 - `pge` - Page number for pagination (default: 1)
+- `sort` - Sort order: 'date', 'product_name asc', 'product_name desc', 'price_asc', 'price_desc', 'drt', 'rnd' (default: none)
 - `layout` - Layout type: grid or list (default: grid)
 - `columns` - Number of columns: 2, 3, or 4 (default: 3)
 - `show_image` - Show images: yes or no (default: yes)
@@ -104,6 +105,9 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 [atdw_live_products type="ACCOMM" layout="list" show_pagination="no"]
 [atdw_live_products st="VIC" cats="Wine" size="12" view_slug="listing"]
 [atdw_live_products fl="productName,productImage,productDescription" st="NSW" size="10"]
+[atdw_live_products st="NSW" sort="date" size="12"]
+[atdw_live_products st="QLD" sort="product_name asc" columns="3"]
+[atdw_live_products type="EVENTS" sort="rnd" size="6"]
 ```
 
 **ATDW API Parameters Used:**
@@ -115,6 +119,7 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - `fl` - Field List - subset of response fields (from `fl` attribute)
 - `size` - Result limit (from `size` attribute)
 - `pge` - Page number (from `pge` attribute)
+- `order` - Sort order (from `sort` attribute)
 
 #### Display Single Product
 ```

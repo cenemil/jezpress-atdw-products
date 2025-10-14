@@ -120,6 +120,7 @@ class ATDW_Live_Public {
 				'fl'            => '',  // Field List - subset of data fields to return (comma-separated)
 				'size'          => 12,  // Changed from limit to size, default 12
 				'pge'           => 1,   // Page number for pagination
+				'sort'          => '',  // Sort order (e.g., 'date', 'product_name asc', 'product_name desc', 'rnd', 'drt')
 				'layout'        => 'grid',
 				'columns'       => 3,
 				'show_image'    => 'yes',
@@ -146,6 +147,7 @@ class ATDW_Live_Public {
 			'data-fl'           => esc_attr( $atts['fl'] ),
 			'data-size'         => absint( $atts['size'] ),
 			'data-pge'          => absint( $atts['pge'] ),
+			'data-order'        => esc_attr( $atts['sort'] ),  // Sort order
 			'data-layout'       => esc_attr( $atts['layout'] ),
 			'data-columns'      => absint( $atts['columns'] ),
 			'data-show-image'   => esc_attr( $atts['show_image'] ),

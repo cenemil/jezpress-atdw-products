@@ -41,7 +41,8 @@
 					area: $container.data('region') || '',
 					ptype: $container.data('type') || '',
 					loc: $container.data('location') || '',
-					fl: $container.data('fl') || ''
+					fl: $container.data('fl') || '',
+					order: $container.data('order') || ''  // Sort order from shortcode
 				});
 
 				// Set current page
@@ -545,6 +546,9 @@
 			if (containerParams.loc) params.loc = containerParams.loc;
 			if (containerParams.fl) params.fl = containerParams.fl;
 
+			// Use container's default sort order if set
+			if (containerParams.order) params.order = containerParams.order;
+
 			// Use container's size or default to 20
 			params.size = parseInt(containerParams.size) || 20;
 
@@ -560,7 +564,7 @@
 				params.ct = suburb;  // Use ct parameter for ATDW API
 			}
 
-			// Get sort option (overrides any existing sort)
+			// Get sort option from search form (overrides container default sort)
 			var sortBy = $container.find('.atdw-filter-sort').val();
 			if (sortBy) {
 				// Use order parameter for ATDW API sorting
@@ -694,6 +698,7 @@
 			if (params.ptype) apiParams.ptype = params.ptype;
 			if (params.loc) apiParams.loc = params.loc;
 			if (params.fl) apiParams.fl = params.fl;
+			if (params.order) apiParams.order = params.order;  // Sort order
 
 			// Add pagination parameters - using ATDW API format
 			apiParams.size = parseInt(params.size) || 12;  // Dynamic size from shortcode
