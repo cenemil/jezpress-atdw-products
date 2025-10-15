@@ -12,6 +12,9 @@
 	 */
 	var ATDWLive = {
 
+		// Cache for fetched products
+		productCache: {},
+
 		/**
 		 * Initialize
 		 */
@@ -19,6 +22,7 @@
 			this.initProductContainers();
 			this.initSingleContainers();
 			this.initSearchContainers();
+			this.initMetaContainers();
 		},
 
 		/**
@@ -42,6 +46,7 @@
 					ptype: $container.data('type') || '',
 					loc: $container.data('location') || '',
 					fl: $container.data('fl') || '',
+				ct: $container.data('ct') || '',  // City/town filter
 					order: $container.data('order') || ''  // Sort order from shortcode
 				});
 
@@ -123,6 +128,319 @@
 					}
 				});
 			});
+		},
+
+		/**
+		 * Initialize meta field containers
+		 */
+		initMetaContainers: function() {
+			var $containers = $('.atdw-live-meta-container');
+
+			// Check if there's an 'id' query parameter in the URL
+			var urlParams = new URLSearchParams(window.location.search);
+			var urlProductId = urlParams.get('id');
+
+			// If there's an id in URL but no containers, fetch the product anyway for potential use
+			if (urlProductId && $containers.length === 0) {
+				ATDWLive.fetchProductForMetaContainers(urlProductId, []);
+				return;
+			}
+
+			if ($containers.length === 0) {
+				return;
+			}
+
+			// Group containers by product ID
+			var productGroups = {};
+
+			$containers.each(function() {
+				var $container = $(this);
+				var productId = $container.data('product-id');
+				var metaKey = $container.data('meta-key');
+
+				if (!productId || !metaKey) {
+					$container.find('.atdw-live-loading').hide();
+					$container.find('.atdw-live-error').show();
+					return;
+				}
+
+				// Group by product ID
+				if (!productGroups[productId]) {
+					productGroups[productId] = [];
+				}
+				productGroups[productId].push($container);
+			});
+
+			// Fetch each unique product once and populate all its containers
+			$.each(productGroups, function(productId, containers) {
+				ATDWLive.fetchProductForMetaContainers(productId, containers);
+			});
+		},
+
+		/**
+		 * Fetch product once and populate all meta containers for that product
+		 */
+		fetchProductForMetaContainers: function(productId, containers) {
+			// Check if product is already cached
+			if (ATDWLive.productCache[productId]) {
+				var product = ATDWLive.productCache[productId];
+				// Populate all containers for this product
+				$.each(containers, function(index, $container) {
+					$container.find('.atdw-live-loading').hide();
+					ATDWLive.displayMetaField(product, $container);
+				});
+				console.log('ATDW: Using cached product data for ID:', productId);
+				return;
+			}
+
+			var params = {
+				productId: productId
+			};
+
+			console.log('ATDW: Fetching product data for ID:', productId);
+
+			$.ajax({
+				url: atdwLive.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'atdw_live_fetch',
+					nonce: atdwLive.nonce,
+					endpoint: '/product',
+					params: params
+				},
+				success: function(response) {
+					if (response.success && response.data) {
+						var product = response.data.product || response.data;
+
+						// Store in cache
+						ATDWLive.productCache[productId] = product;
+						console.log('ATDW: Product data cached for ID:', productId);
+
+						// Make product data globally accessible
+						if (typeof window.atdwProduct === 'undefined') {
+							window.atdwProduct = {};
+						}
+						window.atdwProduct[productId] = product;
+
+						// Populate all containers for this product (if any)
+						if (containers.length > 0) {
+							$.each(containers, function(index, $container) {
+								$container.find('.atdw-live-loading').hide();
+								ATDWLive.displayMetaField(product, $container);
+							});
+						}
+					} else {
+						// Show error in all containers (if any)
+						var errorMsg = response.data && response.data.message ? response.data.message : 'Error loading product';
+						if (containers.length > 0) {
+							$.each(containers, function(index, $container) {
+								$container.find('.atdw-live-loading').hide();
+								$container.find('.atdw-live-error').find('p').text(errorMsg);
+								$container.find('.atdw-live-error').show();
+							});
+						}
+						console.error('ATDW API Error:', response);
+					}
+				},
+				error: function(xhr, status, error) {
+					// Show error in all containers (if any)
+					if (containers.length > 0) {
+						$.each(containers, function(index, $container) {
+							$container.find('.atdw-live-loading').hide();
+							$container.find('.atdw-live-error').show();
+						});
+					}
+					console.error('AJAX Error:', status, error);
+				}
+			});
+		},
+
+		/**
+		 * Display a specific meta field from product data
+		 */
+		displayMetaField: function(product, $container) {
+			var $content = $container.find('.atdw-live-meta-content');
+			var metaKey = $container.data('meta-key');
+			var format = $container.data('format') || 'html';
+			var before = $container.data('before') || '';
+			var after = $container.data('after') || '';
+			var size = $container.data('size') || 'medium';
+			var columns = parseInt($container.data('columns')) || 3;
+			var link = $container.data('link') !== 'no';
+
+			// Try to use the exact API field name first (case-sensitive)
+			var value = product[metaKey];
+			var fieldName = metaKey;
+
+			// If not found, try friendly aliases (for backward compatibility)
+			if (!value) {
+				var fieldMapping = {
+					'name': 'productName',
+					'title': 'productName',
+					'description': 'productDescription',
+					'phone': 'phone',
+					'email': 'email',
+					'website': 'websiteUrl',
+					'address': 'address',
+					'locality': 'locality',
+					'area': 'area',
+					'state': 'state',
+					'postcode': 'postcode',
+					'country': 'country',
+					'gallery': 'images',
+					'images': 'images',
+					'image': 'productImage',
+					'featured_image': 'productImage',
+					'price': 'rate_from',
+					'rate': 'rate_from'
+				};
+
+				var mappedField = fieldMapping[metaKey.toLowerCase()];
+				if (mappedField) {
+					value = product[mappedField];
+					fieldName = mappedField;
+				}
+			}
+
+			if (!value) {
+				$content.html('<p class="atdw-no-value">No ' + ATDWLive.escapeHtml(metaKey) + ' available</p>');
+				return;
+			}
+
+			var html = before;
+
+			// Handle different field types
+			if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+				// Gallery display
+				html += ATDWLive.renderGallery(value, size, columns, link, product.productName || '');
+			} else if (metaKey.toLowerCase() === 'image' || metaKey.toLowerCase() === 'featured_image') {
+				// Single image
+				html += ATDWLive.renderImage(value, size, link, product.productName || '');
+			} else if (metaKey.toLowerCase() === 'phone') {
+				// Phone with link
+				if (format === 'html') {
+					html += '<a href="tel:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-phone">' + ATDWLive.escapeHtml(value) + '</a>';
+				} else {
+					html += ATDWLive.escapeHtml(value);
+				}
+			} else if (metaKey.toLowerCase() === 'email') {
+				// Email with link
+				if (format === 'html') {
+					html += '<a href="mailto:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-email">' + ATDWLive.escapeHtml(value) + '</a>';
+				} else {
+					html += ATDWLive.escapeHtml(value);
+				}
+			} else if (metaKey.toLowerCase() === 'website' || fieldName === 'websiteUrl') {
+				// Website with link
+				if (format === 'html') {
+					html += '<a href="' + ATDWLive.escapeHtml(value) + '" target="_blank" rel="noopener noreferrer" class="atdw-meta-website">' + ATDWLive.escapeHtml(value) + '</a>';
+				} else {
+					html += ATDWLive.escapeHtml(value);
+				}
+			} else if (metaKey.toLowerCase() === 'description' || fieldName === 'productDescription') {
+				// Description
+				if (format === 'text') {
+					// Strip HTML if format is text
+					var tempDiv = document.createElement('div');
+					tempDiv.innerHTML = value;
+					html += ATDWLive.escapeHtml(tempDiv.textContent || tempDiv.innerText || '');
+				} else if (format === 'raw') {
+					// Raw HTML (use carefully)
+					html += value;
+				} else {
+					// Escaped HTML with line breaks preserved (default)
+					html += '<div class="atdw-meta-description">' + ATDWLive.nl2br(ATDWLive.escapeHtml(value)) + '</div>';
+				}
+			} else if (metaKey.toLowerCase() === 'price' || metaKey.toLowerCase() === 'rate') {
+				// Price with formatting
+				if (format === 'html') {
+					html += '<span class="atdw-meta-price">$' + ATDWLive.escapeHtml(value) + '</span>';
+				} else {
+					html += '$' + ATDWLive.escapeHtml(value);
+				}
+			} else {
+				// Default text display
+				if (format === 'raw') {
+					html += value;
+				} else {
+					html += '<span class="atdw-meta-value">' + ATDWLive.escapeHtml(value) + '</span>';
+				}
+			}
+
+			html += after;
+
+			$content.html(html);
+		},
+
+		/**
+		 * Render gallery of images
+		 */
+		renderGallery: function(images, size, columns, link, altText) {
+			if (!Array.isArray(images)) {
+				images = [images];
+			}
+
+			if (images.length === 0) {
+				return '<p class="atdw-no-value">No images available</p>';
+			}
+
+			var html = '<div class="atdw-meta-gallery atdw-gallery-columns-' + columns + '">';
+
+			for (var i = 0; i < images.length; i++) {
+				var imageUrl = images[i];
+				if (imageUrl) {
+					// Strip query string
+					imageUrl = imageUrl.split('?')[0];
+
+					// Apply size parameter for thumbnail (you can expand this)
+					var displayUrl = imageUrl;
+					if (size === 'thumbnail') {
+						displayUrl = imageUrl.replace(/\.(jpg|jpeg|png|gif)$/i, '-thumb.$1');
+					}
+
+					html += '<div class="atdw-gallery-item">';
+					if (link) {
+						html += '<a href="' + ATDWLive.escapeHtml(imageUrl) + '" target="_blank" class="atdw-gallery-link">';
+					}
+					html += '<img src="' + ATDWLive.escapeHtml(displayUrl) + '" alt="' + ATDWLive.escapeHtml(altText + ' - Image ' + (i + 1)) + '" loading="lazy" />';
+					if (link) {
+						html += '</a>';
+					}
+					html += '</div>';
+				}
+			}
+
+			html += '</div>';
+			return html;
+		},
+
+		/**
+		 * Render single image
+		 */
+		renderImage: function(imageUrl, size, link, altText) {
+			if (!imageUrl) {
+				return '<p class="atdw-no-value">No image available</p>';
+			}
+
+			// Strip query string
+			imageUrl = imageUrl.split('?')[0];
+
+			// Apply size parameter
+			var displayUrl = imageUrl;
+			if (size === 'thumbnail') {
+				displayUrl = imageUrl.replace(/\.(jpg|jpeg|png|gif)$/i, '-thumb.$1');
+			}
+
+			var html = '<div class="atdw-meta-image">';
+			if (link) {
+				html += '<a href="' + ATDWLive.escapeHtml(imageUrl) + '" target="_blank" class="atdw-image-link">';
+			}
+			html += '<img src="' + ATDWLive.escapeHtml(displayUrl) + '" alt="' + ATDWLive.escapeHtml(altText) + '" />';
+			if (link) {
+				html += '</a>';
+			}
+			html += '</div>';
+			return html;
 		},
 
 		/**
@@ -545,9 +863,10 @@
 			if (containerParams.ptype) params.ptype = containerParams.ptype;
 			if (containerParams.loc) params.loc = containerParams.loc;
 			if (containerParams.fl) params.fl = containerParams.fl;
+			if (containerParams.ct) params.ct = containerParams.ct;
 
 			// Use container's default sort order if set
-			if (containerParams.order) params.order = containerParams.order;
+			if (containerParams.order) params.order = ATDWLive.mapSortOrder(containerParams.order);
 
 			// Use container's size or default to 20
 			params.size = parseInt(containerParams.size) || 20;
@@ -568,7 +887,7 @@
 			var sortBy = $container.find('.atdw-filter-sort').val();
 			if (sortBy) {
 				// Use order parameter for ATDW API sorting
-				params.order = sortBy;
+				params.order = ATDWLive.mapSortOrder(sortBy);
 			}
 
 			// Get selected types (ProductTypeId values) - overrides container ptype
@@ -698,7 +1017,8 @@
 			if (params.ptype) apiParams.ptype = params.ptype;
 			if (params.loc) apiParams.loc = params.loc;
 			if (params.fl) apiParams.fl = params.fl;
-			if (params.order) apiParams.order = params.order;  // Sort order
+			if (params.ct) apiParams.ct = params.ct;
+			if (params.order) apiParams.order = ATDWLive.mapSortOrder(params.order);  // Sort order with mapping
 
 			// Add pagination parameters - using ATDW API format
 			apiParams.size = parseInt(params.size) || 12;  // Dynamic size from shortcode
@@ -911,6 +1231,23 @@
 		},
 
 		/**
+		 * Map sort parameter to ATDW API order value
+		 */
+		mapSortOrder: function(sortValue) {
+			if (!sortValue) return '';
+
+			// Map user-friendly sort values to ATDW API order values
+			var sortMap = {
+				'date': 'next_occurrence asc',
+				'price_asc': 'rate_from asc',
+				'price_desc': 'rate_from desc'
+			};
+
+			// Return mapped value if exists, otherwise return original value
+			return sortMap[sortValue] || sortValue;
+		},
+
+		/**
 		 * Escape HTML to prevent XSS
 		 */
 		escapeHtml: function(text) {
@@ -923,6 +1260,15 @@
 				"'": '&#039;'
 			};
 			return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+		},
+
+		/**
+		 * Convert newlines to <br> tags
+		 * Use this after escapeHtml() to preserve line breaks in text
+		 */
+		nl2br: function(text) {
+			if (!text) return '';
+			return String(text).replace(/\n/g, '<br>');
 		}
 	};
 

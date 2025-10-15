@@ -99,6 +99,40 @@ $output_formats = $settings->get_output_formats();
 			</table>
 		</div>
 
+		<!-- Google Maps Settings -->
+		<div class="atdw-card">
+			<h2><?php esc_html_e( 'Google Maps Settings', 'atdw-live-products' ); ?></h2>
+			<table class="form-table">
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_gmaps_api_key"><?php esc_html_e( 'Google Maps API Key', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="text" id="atdw_live_gmaps_api_key" name="atdw_live_gmaps_api_key" value="<?php echo esc_attr( $settings->get( 'atdw_live_gmaps_api_key' ) ); ?>" class="regular-text" />
+						<p class="description">
+							<?php esc_html_e( 'Enter your Google Maps API key. Required for displaying maps.', 'atdw-live-products' ); ?><br>
+							<?php
+							printf(
+								/* translators: %s: Google Cloud Console URL */
+								esc_html__( 'Get your API key from the %s.', 'atdw-live-products' ),
+								'<a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Google Cloud Console', 'atdw-live-products' ) . '</a>'
+							);
+							?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_gmaps_base_url"><?php esc_html_e( 'Google Maps API Base URL', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="url" id="atdw_live_gmaps_base_url" name="atdw_live_gmaps_base_url" value="<?php echo esc_url( $settings->get( 'atdw_live_gmaps_base_url' ) ); ?>" class="regular-text" />
+						<p class="description"><?php esc_html_e( 'Default: https://maps.googleapis.com/maps/api/js', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
 		<!-- Custom CSS -->
 		<div class="atdw-card">
 			<h2><?php esc_html_e( 'Custom CSS', 'atdw-live-products' ); ?></h2>

@@ -53,6 +53,8 @@ class ATDW_Live_Settings {
 			'atdw_live_cache_enabled'  => get_option( 'atdw_live_cache_enabled', true ),
 			'atdw_live_cache_ttl'      => get_option( 'atdw_live_cache_ttl', 3600 ),
 			'atdw_live_custom_css'     => get_option( 'atdw_live_custom_css', '' ),
+			'atdw_live_gmaps_api_key'  => get_option( 'atdw_live_gmaps_api_key', '' ),
+			'atdw_live_gmaps_base_url' => get_option( 'atdw_live_gmaps_base_url', 'https://maps.googleapis.com/maps/api/js' ),
 		);
 	}
 
@@ -116,6 +118,19 @@ class ATDW_Live_Settings {
 			'type'              => 'string',
 			'sanitize_callback' => array( $this, 'sanitize_css' ),
 			'default'           => '',
+		) );
+
+		// Google Maps Settings
+		register_setting( 'atdw_live_gmaps_settings', 'atdw_live_gmaps_api_key', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+
+		register_setting( 'atdw_live_gmaps_settings', 'atdw_live_gmaps_base_url', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'esc_url_raw',
+			'default'           => 'https://maps.googleapis.com/maps/api/js',
 		) );
 	}
 
@@ -225,6 +240,8 @@ class ATDW_Live_Settings {
 			'atdw_live_cache_ttl'      => 3600,
 			'atdw_live_output_format'  => 'json',
 			'atdw_live_custom_css'     => '',
+			'atdw_live_gmaps_api_key'  => '',
+			'atdw_live_gmaps_base_url' => 'https://maps.googleapis.com/maps/api/js',
 		);
 
 		foreach ( $defaults as $key => $value ) {

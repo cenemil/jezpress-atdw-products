@@ -216,6 +216,15 @@ class ATDW_Live_Admin {
 			$this->settings->update( 'atdw_live_custom_css', $custom_css );
 		}
 
+		// Google Maps Settings
+		if ( isset( $_POST['atdw_live_gmaps_api_key'] ) ) {
+			$this->settings->update( 'atdw_live_gmaps_api_key', sanitize_text_field( $_POST['atdw_live_gmaps_api_key'] ) );
+		}
+
+		if ( isset( $_POST['atdw_live_gmaps_base_url'] ) ) {
+			$this->settings->update( 'atdw_live_gmaps_base_url', esc_url_raw( $_POST['atdw_live_gmaps_base_url'] ) );
+		}
+
 		// Show success message
 		add_settings_error(
 			'atdw_live_settings',

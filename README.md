@@ -86,10 +86,11 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - `region` - Filter by region/area
 - `location` - Filter by location
 - `type` - Filter by product type
+- `ct` - Filter by city/town (comma-separated values, e.g., "Sydney,Melbourne,Brisbane")
 - `fl` - Field List - specify which data fields to return from API (comma-separated, reduces response size)
 - `size` - Number of products to display (default: 12)
 - `pge` - Page number for pagination (default: 1)
-- `sort` - Sort order: 'date', 'product_name asc', 'product_name desc', 'price_asc', 'price_desc', 'drt', 'rnd' (default: none)
+- `sort` - Sort order: 'date' (sorts by next_occurrence asc), 'product_name asc', 'product_name desc', 'price_asc' (sorts by rate_from asc), 'price_desc' (sorts by rate_from desc), 'drt', 'rnd' (default: none)
 - `layout` - Layout type: grid or list (default: grid)
 - `columns` - Number of columns: 2, 3, or 4 (default: 3)
 - `show_image` - Show images: yes or no (default: yes)
@@ -108,6 +109,8 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 [atdw_live_products st="NSW" sort="date" size="12"]
 [atdw_live_products st="QLD" sort="product_name asc" columns="3"]
 [atdw_live_products type="EVENTS" sort="rnd" size="6"]
+[atdw_live_products st="NSW" ct="Sydney,Newcastle,Wollongong" size="10"]
+[atdw_live_products ct="Melbourne,Geelong" type="ACCOMM" columns="4"]
 ```
 
 **ATDW API Parameters Used:**
@@ -116,6 +119,7 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - `area` - Area/region (from `region` attribute)
 - `loc` - Location (from `location` attribute)
 - `ptype` - Product type (from `type` attribute)
+- `ct` - City/town filter (from `ct` attribute, comma-separated)
 - `fl` - Field List - subset of response fields (from `fl` attribute)
 - `size` - Result limit (from `size` attribute)
 - `pge` - Page number (from `pge` attribute)
@@ -143,6 +147,138 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - `show_sort` - Show sort filter: yes or no (default: yes)
 - `show_types` - Show type checkboxes: yes or no (default: yes)
 - `columns` - Number of columns for results: 2, 3, or 4 (default: 3)
+
+#### Display Product Meta Field
+```
+[atdw_live_meta key="FIELD_NAME"]
+```
+
+Display a specific meta field from a product. This is useful for creating custom product detail pages where you want to display individual product fields.
+
+**Attributes:**
+- `id` - ATDW Product ID (optional - automatically uses URL query parameter `?id=PRODUCT_ID` if not provided)
+- `key` - Meta key to display (required) - see supported keys below
+- `format` - Output format: 'html' (default), 'text', or 'raw'
+- `class` - Custom CSS class for styling
+- `before` - Content to display before the value
+- `after` - Content to display after the value
+- `size` - Image size for gallery: 'thumbnail', 'medium' (default), 'large', 'full'
+- `columns` - Number of columns for gallery display: 1-5 (default: 3)
+- `link` - Whether to link gallery images to full size: 'yes' (default) or 'no'
+
+**Smart ID Detection:**
+The shortcode automatically detects the product ID from the URL query parameter. For example, if your page URL is `example.com/detail?id=56b2386bdae9a4b66d8b4c6f`, you can simply use:
+```
+[atdw_live_meta key="name"]
+[atdw_live_meta key="gallery" columns="4"]
+```
+
+This makes it easy to create a single product detail page template that dynamically displays different products based on the URL parameter. You can still override this by explicitly providing the `id` attribute in the shortcode.
+
+**Performance Optimization:**
+When multiple `atdw_live_meta` shortcodes are used on the same page with the same product ID, the plugin automatically:
+1. Groups all shortcodes by product ID
+2. Makes a single API request per unique product ID
+3. Populates all meta fields from that one API response
+4. Caches the product data for instant reuse
+
+This means you can use as many meta shortcodes as needed on a detail page without worrying about making multiple API calls. For example, using 10 different meta shortcodes for the same product will only trigger 1 API request instead of 10.
+
+**Automatic Data Fetching:**
+If your page URL contains an `?id=PRODUCT_ID` query parameter, the plugin will automatically fetch that product's data from the API even if there are no meta shortcodes on the page. This makes the product data available:
+- In the JavaScript console: `window.atdwProduct['PRODUCT_ID']`
+- For custom JavaScript code to access and use
+- For dynamically added shortcodes
+
+The fetched data is cached, so subsequent requests for the same product (even on page navigation back) will use the cached version instead of making another API call.
+
+**Supported Meta Keys:**
+- `name` or `title` - Product name
+- `description` - Product description
+- `phone` - Phone number (automatically linked with tel:)
+- `email` - Email address (automatically linked with mailto:)
+- `website` - Website URL (automatically linked)
+- `address` - Physical address
+- `locality` - Suburb/locality
+- `area` - Area/region
+- `state` - State
+- `postcode` - Postcode
+- `country` - Country
+- `gallery` or `images` - Image gallery (special rendering with grid layout)
+- `image` or `featured_image` - Featured/single image
+- `price` or `rate` - Price (formatted with $ symbol)
+
+You can also use any API field name directly (e.g., `productName`, `productDescription`, `websiteUrl`, etc.)
+
+**Examples:**
+
+Using URL query parameter (recommended for detail pages):
+```
+<!-- On a page with URL: example.com/detail?id=56b2386bdae9a4b66d8b4c6f -->
+
+<!-- Display product name -->
+[atdw_live_meta key="name"]
+
+<!-- Display product description -->
+[atdw_live_meta key="description" format="html"]
+
+<!-- Display phone with custom label -->
+[atdw_live_meta key="phone" before="Call us: "]
+
+<!-- Display email with custom styling -->
+[atdw_live_meta key="email" class="contact-email"]
+
+<!-- Display image gallery in 4 columns -->
+[atdw_live_meta key="gallery" columns="4"]
+
+<!-- Display gallery without links -->
+[atdw_live_meta key="gallery" link="no"]
+
+<!-- Display featured image -->
+[atdw_live_meta key="image" size="large"]
+
+<!-- Display address with custom formatting -->
+[atdw_live_meta key="address" before="<strong>Location:</strong> "]
+
+<!-- Display website -->
+[atdw_live_meta key="website"]
+
+<!-- Display price -->
+[atdw_live_meta key="price" before="From "]
+```
+
+Using explicit ID (useful for fixed content):
+```
+<!-- Display specific product name -->
+[atdw_live_meta id="56b2386bdae9a4b66d8b4c6f" key="name"]
+
+<!-- Display specific product gallery -->
+[atdw_live_meta id="56b2386bdae9a4b66d8b4c6f" key="gallery" columns="3"]
+```
+
+**Use Case Example:**
+Create a product detail page template (e.g., `/detail`) and add these shortcodes:
+```
+<h1>[atdw_live_meta key="name"]</h1>
+<div class="product-info">
+  [atdw_live_meta key="gallery" columns="4"]
+  [atdw_live_meta key="description"]
+  <div class="contact-details">
+    [atdw_live_meta key="phone" before="<strong>Phone:</strong> "]
+    [atdw_live_meta key="email" before="<strong>Email:</strong> "]
+    [atdw_live_meta key="website" before="<strong>Website:</strong> "]
+  </div>
+</div>
+```
+Then link to products using: `/detail?id=PRODUCT_ID`
+
+**Special Considerations for Gallery:**
+The gallery key renders images in a responsive grid layout with the following features:
+- Configurable column count (1-5 columns)
+- Responsive design (automatically adjusts for mobile)
+- Optional linking to full-size images
+- Lazy loading for performance
+- Hover effects for better UX
 
 ## How It Works
 
@@ -297,6 +433,23 @@ For issues, questions, or contributions:
 - Website: https://www.jezweb.com.au
 
 ## Changelog
+
+### Version 1.2.0
+- Added new `[atdw_live_meta]` shortcode for displaying individual product meta fields
+- Smart ID detection: automatically uses URL query parameter `?id=PRODUCT_ID` if not explicitly provided
+- Automatic data fetching: fetches product data when `?id` is in URL, even without shortcodes
+- Product data caching: stores fetched products in memory for instant reuse
+- Global data access: product data available via `window.atdwProduct` for custom JavaScript
+- Performance optimization: groups meta shortcodes by product ID and makes single API call per product
+- UTF-16 encoding support: handles ATDW API responses in UTF-16LE, UTF-16BE, and UTF-8
+- Support for gallery/images display with configurable columns and responsive layout
+- Special handling for phone, email, and website fields with automatic linking
+- Support for custom formatting options (html, text, raw)
+- Added before/after content wrapping for meta fields
+- Image size controls for gallery and single image display
+- Enhanced CSS styling for meta field display
+- Simplified product detail page creation with automatic ID detection
+- Efficient rendering: multiple meta shortcodes for same product only trigger one API request
 
 ### Version 1.1.0
 - Added `fl` (Field List) parameter to control API response fields

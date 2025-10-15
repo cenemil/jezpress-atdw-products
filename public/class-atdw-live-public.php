@@ -45,6 +45,7 @@ class ATDW_Live_Public {
 		add_shortcode( 'atdw_live_products', array( $this, 'products_shortcode' ) );
 		add_shortcode( 'atdw_live_product', array( $this, 'single_product_shortcode' ) );
 		add_shortcode( 'atdw_live_search', array( $this, 'search_shortcode' ) );
+		add_shortcode( 'atdw_live_meta', array( $this, 'meta_shortcode' ) );
 	}
 
 	/**
@@ -117,6 +118,7 @@ class ATDW_Live_Public {
 				'region'        => '',
 				'location'      => '',
 				'type'          => '',
+				'ct'            => '',  // City/town filter (comma-separated values)
 				'fl'            => '',  // Field List - subset of data fields to return (comma-separated)
 				'size'          => 12,  // Changed from limit to size, default 12
 				'pge'           => 1,   // Page number for pagination
@@ -144,6 +146,7 @@ class ATDW_Live_Public {
 			'data-region'       => esc_attr( $atts['region'] ),
 			'data-location'     => esc_attr( $atts['location'] ),
 			'data-type'         => esc_attr( $atts['type'] ),
+			'data-ct'           => esc_attr( $atts['ct'] ),  // City/town filter
 			'data-fl'           => esc_attr( $atts['fl'] ),
 			'data-size'         => absint( $atts['size'] ),
 			'data-pge'          => absint( $atts['pge'] ),
@@ -357,13 +360,86 @@ class ATDW_Live_Public {
 	}
 
 	/**
+	 * Meta shortcode - displays a specific meta field from a product
+	 *
+	 * @param array $atts Shortcode attributes.
+	 * @return string Shortcode output.
+	 */
+	public function meta_shortcode( $atts ) {
+		$atts = shortcode_atts(
+			array(
+				'id'      => '',      // Product ID (optional - will use URL query param if not set)
+				'key'     => '',      // Meta key to display (required)
+				'format'  => 'html',  // Output format: 'html' (default), 'text', or 'raw'
+				'class'   => '',      // Custom CSS class
+				'before'  => '',      // Content before the value
+				'after'   => '',      // Content after the value
+				'size'    => 'medium', // Image size for gallery: 'thumbnail', 'medium', 'large', 'full'
+				'columns' => 3,       // Number of columns for gallery display
+				'link'    => 'yes',   // Whether to link gallery images to full size
+			),
+			$atts,
+			'atdw_live_meta'
+		);
+
+		// If no ID provided in shortcode, try to get it from URL query parameter
+		if ( empty( $atts['id'] ) ) {
+			$atts['id'] = isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( $_GET['id'] ) ) : '';
+		}
+
+		// Validate required attributes
+		if ( empty( $atts['id'] ) ) {
+			return '<p class="atdw-error">' . esc_html__( 'Product ID is required. Please provide it via shortcode attribute or URL query parameter.', 'atdw-live-products' ) . '</p>';
+		}
+
+		if ( empty( $atts['key'] ) ) {
+			return '<p class="atdw-error">' . esc_html__( 'Meta key is required.', 'atdw-live-products' ) . '</p>';
+		}
+
+		// Generate unique ID for this instance
+		$instance_id = 'atdw-live-meta-' . uniqid();
+
+		// Prepare CSS classes
+		$css_classes = array( 'atdw-live-meta-container', 'atdw-meta-key-' . sanitize_html_class( $atts['key'] ) );
+		if ( ! empty( $atts['class'] ) ) {
+			$css_classes[] = sanitize_html_class( $atts['class'] );
+		}
+
+		// Prepare data attributes - store all config for JS to use
+		$data_attrs = array(
+			'data-product-id'  => esc_attr( $atts['id'] ),
+			'data-meta-key'    => esc_attr( $atts['key'] ),
+			'data-format'      => esc_attr( $atts['format'] ),
+			'data-before'      => esc_attr( $atts['before'] ),
+			'data-after'       => esc_attr( $atts['after'] ),
+			'data-size'        => esc_attr( $atts['size'] ),
+			'data-columns'     => absint( $atts['columns'] ),
+			'data-link'        => esc_attr( $atts['link'] ),
+		);
+
+		ob_start();
+		?>
+		<div id="<?php echo esc_attr( $instance_id ); ?>" class="<?php echo esc_attr( implode( ' ', $css_classes ) ); ?>" <?php echo implode( ' ', array_map( function( $k, $v ) { return "$k=\"$v\""; }, array_keys( $data_attrs ), $data_attrs ) ); ?>>
+			<div class="atdw-live-loading">
+				<span class="atdw-spinner"></span>
+			</div>
+			<div class="atdw-live-meta-content"></div>
+			<div class="atdw-live-error" style="display: none;">
+				<p><?php esc_html_e( 'Error loading meta field.', 'atdw-live-products' ); ?></p>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
 	 * Check if content has ATDW shortcode
 	 *
 	 * @param string $content Content to check.
 	 * @return bool True if has shortcode, false otherwise.
 	 */
 	private function has_shortcode( $content ) {
-		$shortcodes = array( 'atdw_live_products', 'atdw_live_product', 'atdw_live_search' );
+		$shortcodes = array( 'atdw_live_products', 'atdw_live_product', 'atdw_live_search', 'atdw_live_meta' );
 
 		foreach ( $shortcodes as $shortcode ) {
 			if ( has_shortcode( $content, $shortcode ) ) {
