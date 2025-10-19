@@ -73,11 +73,28 @@ class ATDW_Live_Public {
 			wp_add_inline_style( 'atdw-live-public-css', $custom_css );
 		}
 
+		// Enqueue GLightbox CSS for gallery lightbox
+		wp_enqueue_style(
+			'glightbox-css',
+			ATDW_LIVE_PLUGIN_URL . 'public/assets/lib/glightbox/glightbox.min.css',
+			array(),
+			'3.3.0'
+		);
+
+		// Enqueue GLightbox JS for gallery lightbox
+		wp_enqueue_script(
+			'glightbox-js',
+			ATDW_LIVE_PLUGIN_URL . 'public/assets/lib/glightbox/glightbox.min.js',
+			array(),
+			'3.3.0',
+			true
+		);
+
 		// Enqueue JS
 		wp_enqueue_script(
 			'atdw-live-public-js',
 			ATDW_LIVE_PLUGIN_URL . 'public/assets/js/atdw-live.js',
-			array( 'jquery' ),
+			array( 'jquery', 'glightbox-js' ),
 			ATDW_LIVE_VERSION,
 			true
 		);
@@ -87,14 +104,20 @@ class ATDW_Live_Public {
 			'atdw-live-public-js',
 			'atdwLive',
 			array(
-				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'atdw_live_nonce' ),
-				'cacheEnabled'  => $this->settings->get( 'atdw_live_cache_enabled' ),
-				'apiBaseUrl'    => $this->settings->get( 'atdw_live_api_base_url' ),
-				'apiKey'        => $this->settings->get( 'atdw_live_api_key' ),
-				'marketVariant' => $this->settings->get( 'atdw_live_market_variant' ),
-				'outputFormat'  => $this->settings->get( 'atdw_live_output_format' ),
-				'strings'       => array(
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( 'atdw_live_nonce' ),
+				'cacheEnabled'    => $this->settings->get( 'atdw_live_cache_enabled' ),
+				'apiBaseUrl'      => $this->settings->get( 'atdw_live_api_base_url' ),
+				'apiKey'          => $this->settings->get( 'atdw_live_api_key' ),
+				'marketVariant'   => $this->settings->get( 'atdw_live_market_variant' ),
+				'outputFormat'    => $this->settings->get( 'atdw_live_output_format' ),
+				'gmapsApiKey'     => $this->settings->get( 'atdw_live_gmaps_api_key' ),
+				'gmapsBaseUrl'    => $this->settings->get( 'atdw_live_gmaps_base_url' ),
+				'galleryWidth'    => $this->settings->get( 'atdw_live_gallery_width', 600 ),
+				'galleryHeight'   => $this->settings->get( 'atdw_live_gallery_height', 400 ),
+				'thumbnailWidth'  => $this->settings->get( 'atdw_live_thumbnail_width', 150 ),
+				'thumbnailHeight' => $this->settings->get( 'atdw_live_thumbnail_height', 150 ),
+				'strings'         => array(
 					'loading'    => __( 'Loading listings...', 'atdw-live-products' ),
 					'noProducts' => __( 'No listings found.', 'atdw-live-products' ),
 					'error'      => __( 'Error loading listings. Please try again.', 'atdw-live-products' ),
@@ -128,6 +151,7 @@ class ATDW_Live_Public {
 				'show_image'    => 'yes',
 				'show_excerpt'  => 'yes',
 				'show_pagination' => 'yes',
+				'pagination_type' => 'number',  // Pagination type: 'number' (inline numbers) or 'prevnext' (prev/next buttons)
 				'view_label'    => 'View Details',  // Button label
 				'view_slug'     => 'detail',  // Single product page slug
 			),
@@ -156,6 +180,7 @@ class ATDW_Live_Public {
 			'data-show-image'   => esc_attr( $atts['show_image'] ),
 			'data-show-excerpt' => esc_attr( $atts['show_excerpt'] ),
 			'data-show-pagination' => esc_attr( $atts['show_pagination'] ),
+			'data-pagination-type' => esc_attr( $atts['pagination_type'] ),
 			'data-view-label'   => esc_attr( $atts['view_label'] ),
 			'data-view-slug'    => esc_attr( $atts['view_slug'] ),
 		);
@@ -368,15 +393,20 @@ class ATDW_Live_Public {
 	public function meta_shortcode( $atts ) {
 		$atts = shortcode_atts(
 			array(
-				'id'      => '',      // Product ID (optional - will use URL query param if not set)
-				'key'     => '',      // Meta key to display (required)
-				'format'  => 'html',  // Output format: 'html' (default), 'text', or 'raw'
-				'class'   => '',      // Custom CSS class
-				'before'  => '',      // Content before the value
-				'after'   => '',      // Content after the value
-				'size'    => 'medium', // Image size for gallery: 'thumbnail', 'medium', 'large', 'full'
-				'columns' => 3,       // Number of columns for gallery display
-				'link'    => 'yes',   // Whether to link gallery images to full size
+				'id'         => '',      // Product ID (optional - will use URL query param if not set)
+				'key'        => '',      // Meta key to display (required)
+				'format'     => 'html',  // Output format: 'html' (default), 'text', or 'raw'
+				'class'      => '',      // Custom CSS class
+				'before'     => '',      // Content before the value
+				'after'      => '',      // Content after the value
+				'size'       => 'medium', // Image size for gallery: 'thumbnail', 'medium', 'large', 'full'
+				'columns'    => 3,       // Number of columns for gallery display
+				'link'       => 'yes',   // Whether to link gallery images to full size
+				'label'      => '',      // Label text for links (phone, email, website)
+				'map_width'  => '100%',  // Map width (for map key)
+				'map_height' => '400px', // Map height (for map key)
+				'map_zoom'   => '15',    // Map zoom level (for map key)
+				'attribute_type' => '',  // Attribute Type ID to filter attributes (for key='attributes')
 			),
 			$atts,
 			'atdw_live_meta'
@@ -387,9 +417,9 @@ class ATDW_Live_Public {
 			$atts['id'] = isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( $_GET['id'] ) ) : '';
 		}
 
-		// Validate required attributes
+		// Validate required attributes - if no ID, return empty string (don't display anything)
 		if ( empty( $atts['id'] ) ) {
-			return '<p class="atdw-error">' . esc_html__( 'Product ID is required. Please provide it via shortcode attribute or URL query parameter.', 'atdw-live-products' ) . '</p>';
+			return '';
 		}
 
 		if ( empty( $atts['key'] ) ) {
@@ -415,6 +445,11 @@ class ATDW_Live_Public {
 			'data-size'        => esc_attr( $atts['size'] ),
 			'data-columns'     => absint( $atts['columns'] ),
 			'data-link'        => esc_attr( $atts['link'] ),
+			'data-label'       => esc_attr( $atts['label'] ),
+			'data-map-width'   => esc_attr( $atts['map_width'] ),
+			'data-map-height'  => esc_attr( $atts['map_height'] ),
+			'data-map-zoom'    => absint( $atts['map_zoom'] ),
+			'data-attribute-type' => esc_attr( $atts['attribute_type'] ),
 		);
 
 		ob_start();

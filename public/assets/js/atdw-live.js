@@ -267,8 +267,33 @@
 			var size = $container.data('size') || 'medium';
 			var columns = parseInt($container.data('columns')) || 3;
 			var link = $container.data('link') !== 'no';
+			var label = $container.data('label') || '';
+		var galleryLayout = $container.data('gallery-layout') || 'inline';
+		var attributeType = $container.data('attribute-type') || '';
 
-			// Try to use the exact API field name first (case-sensitive)
+		// Handle special 'address' key - extract from addresses array
+		if (metaKey.toLowerCase() === 'address') {
+			var value = ATDWLive.extractFormattedAddress(product);
+			var fieldName = 'address';
+		}
+		// Handle special 'map' key - extract coordinates from addresses array
+		else if (metaKey.toLowerCase() === 'map') {
+			var value = ATDWLive.extractMapCoordinates(product);
+			var fieldName = 'map';
+		}
+		// Handle special 'gallery'/'images' key - extract from multimedia array
+		else if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+			var value = ATDWLive.extractGalleryFromMultimedia(product);
+			var fieldName = 'gallery';
+		}
+		// Handle special 'attributes' key - extract from attributes array by type
+		else if (metaKey.toLowerCase() === 'attributes') {
+			var value = ATDWLive.extractAttributesByType(product, attributeType);
+			var fieldName = 'attributes';
+		}
+		// Try to use the exact API field name first (case-sensitive)
+		else {
+
 			var value = product[metaKey];
 			var fieldName = metaKey;
 
@@ -300,10 +325,33 @@
 					value = product[mappedField];
 					fieldName = mappedField;
 				}
+		}
+
+			// Priority override: check communication array for phone, email, website
+			if (metaKey.toLowerCase() === 'phone') {
+				var commPhone = ATDWLive.extractPhoneFromCommunication(product);
+				if (commPhone) {
+					value = commPhone;
+					fieldName = 'phone';
+				}
+			} else if (metaKey.toLowerCase() === 'email') {
+				var commEmail = ATDWLive.extractEmailFromCommunication(product);
+				if (commEmail) {
+					value = commEmail;
+					fieldName = 'email';
+				}
+			} else if (metaKey.toLowerCase() === 'website') {
+				var commWebsite = ATDWLive.extractWebsiteFromCommunication(product);
+				if (commWebsite) {
+					value = commWebsite;
+					fieldName = 'websiteUrl';
+				}
+			}
 			}
 
 			if (!value) {
-				$content.html('<p class="atdw-no-value">No ' + ATDWLive.escapeHtml(metaKey) + ' available</p>');
+				// Hide the entire container if no value exists
+				$container.hide();
 				return;
 			}
 
@@ -312,32 +360,65 @@
 			// Handle different field types
 			if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
 				// Gallery display
-				html += ATDWLive.renderGallery(value, size, columns, link, product.productName || '');
+				html += ATDWLive.renderGallery(value, size, columns, link, product.productName || '', galleryLayout);
 			} else if (metaKey.toLowerCase() === 'image' || metaKey.toLowerCase() === 'featured_image') {
 				// Single image
 				html += ATDWLive.renderImage(value, size, link, product.productName || '');
 			} else if (metaKey.toLowerCase() === 'phone') {
 				// Phone with link
+				var linkText = label || value;
 				if (format === 'html') {
-					html += '<a href="tel:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-phone">' + ATDWLive.escapeHtml(value) + '</a>';
+					html += '<a href="tel:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-phone">' + ATDWLive.escapeHtml(linkText) + '</a>';
 				} else {
 					html += ATDWLive.escapeHtml(value);
 				}
 			} else if (metaKey.toLowerCase() === 'email') {
 				// Email with link
+				var linkText = label || value;
 				if (format === 'html') {
-					html += '<a href="mailto:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-email">' + ATDWLive.escapeHtml(value) + '</a>';
+					html += '<a href="mailto:' + ATDWLive.escapeHtml(value) + '" class="atdw-meta-email">' + ATDWLive.escapeHtml(linkText) + '</a>';
 				} else {
 					html += ATDWLive.escapeHtml(value);
 				}
 			} else if (metaKey.toLowerCase() === 'website' || fieldName === 'websiteUrl') {
-				// Website with link
+				// Website with link - ensure protocol is present
+				var websiteUrl = ATDWLive.ensureUrlProtocol(value);
+				var linkText = label || value;
 				if (format === 'html') {
-					html += '<a href="' + ATDWLive.escapeHtml(value) + '" target="_blank" rel="noopener noreferrer" class="atdw-meta-website">' + ATDWLive.escapeHtml(value) + '</a>';
+					html += '<a href="' + ATDWLive.escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer" class="atdw-meta-website">' + ATDWLive.escapeHtml(linkText) + '</a>';
 				} else {
 					html += ATDWLive.escapeHtml(value);
 				}
-			} else if (metaKey.toLowerCase() === 'description' || fieldName === 'productDescription') {
+			} else if (metaKey.toLowerCase() === 'map') {
+			// Map display with Google Maps JavaScript API
+			if (value && value.latitude && value.longitude) {
+				var mapWidth = $container.data('map-width') || '100%';
+				var mapHeight = $container.data('map-height') || '400px';
+				var mapZoom = $container.data('map-zoom') || 15;
+				var gmapsApiKey = atdwLive.gmapsApiKey || '';
+
+				if (format === 'html') {
+					if (gmapsApiKey) {
+						// Generate unique map ID
+						var mapId = 'atdw-map-' + Math.random().toString(36).substr(2, 9);
+
+						// Render Google Maps container with explicit dimensions
+						// Don't use escapeHtml on CSS values to preserve proper formatting
+						html += '<div id="' + mapId + '" class="atdw-meta-map-js" style="width: ' + mapWidth + '; height: ' + mapHeight + '; min-height: ' + mapHeight + ';" data-lat="' + ATDWLive.escapeHtml(value.latitude) + '" data-lng="' + ATDWLive.escapeHtml(value.longitude) + '" data-zoom="' + mapZoom + '" data-product-name="' + ATDWLive.escapeHtml(product.productName || 'Location') + '"></div>';
+
+						// Initialize map after DOM is ready
+						ATDWLive.initGoogleMap(mapId, value.latitude, value.longitude, mapZoom, product.productName || 'Location', gmapsApiKey);
+					} else {
+						// Fallback: show coordinates only (no link)
+						html += '<div class="atdw-meta-map" data-lat="' + ATDWLive.escapeHtml(value.latitude) + '" data-lng="' + ATDWLive.escapeHtml(value.longitude) + '">';
+						html += '<span class="atdw-map-coords">Lat: ' + ATDWLive.escapeHtml(value.latitude) + ', Lng: ' + ATDWLive.escapeHtml(value.longitude) + '</span>';
+						html += '</div>';
+					}
+				} else {
+					html += value.latitude + ', ' + value.longitude;
+				}
+			}
+				} else if (metaKey.toLowerCase() === 'description' || fieldName === 'productDescription') {
 				// Description
 				if (format === 'text') {
 					// Strip HTML if format is text
@@ -358,6 +439,24 @@
 				} else {
 					html += '$' + ATDWLive.escapeHtml(value);
 				}
+			} else if (metaKey.toLowerCase() === 'attributes' && Array.isArray(value)) {
+				// Attributes - display array of descriptions separated by line breaks
+				if (format === 'html') {
+					// Join with <br> tags for HTML display
+					html += '<div class="atdw-meta-attributes">' + value.map(function(desc) {
+						return ATDWLive.escapeHtml(desc);
+					}).join('<br>') + '</div>';
+				} else if (format === 'text') {
+					// Join with newlines for text display
+					html += value.map(function(desc) {
+						return ATDWLive.escapeHtml(desc);
+					}).join('\n');
+				} else {
+					// Default: same as HTML
+					html += '<div class="atdw-meta-attributes">' + value.map(function(desc) {
+						return ATDWLive.escapeHtml(desc);
+					}).join('<br>') + '</div>';
+				}
 			} else {
 				// Default text display
 				if (format === 'raw') {
@@ -370,49 +469,125 @@
 			html += after;
 
 			$content.html(html);
+
+		// Initialize GLightbox for dynamically loaded galleries
+		if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+			ATDWLive.initGLightbox();
+		}
 		},
+	/**
+	 * Render gallery of images
+	 */
+	renderGallery: function(images, size, columns, link, altText, layout) {
+		if (!Array.isArray(images)) {
+			images = [images];
+		}
 
-		/**
-		 * Render gallery of images
-		 */
-		renderGallery: function(images, size, columns, link, altText) {
-			if (!Array.isArray(images)) {
-				images = [images];
-			}
+		if (images.length === 0) {
+			return '<p class="atdw-no-value">No images available</p>';
+		}
 
-			if (images.length === 0) {
-				return '<p class="atdw-no-value">No images available</p>';
-			}
+		// Get gallery settings from atdwLive config (as integers)
+		var galleryWidth = atdwLive.galleryWidth || 600;
+		var galleryHeight = atdwLive.galleryHeight || 400;
+		var thumbnailWidth = atdwLive.thumbnailWidth || 150;
+		var thumbnailHeight = atdwLive.thumbnailHeight || 150;
 
-			var html = '<div class="atdw-meta-gallery atdw-gallery-columns-' + columns + '">';
+		// Default layout to 'inline' if not provided
+		layout = layout || 'inline';
+
+		// Generate unique gallery ID for GLightbox grouping
+		var galleryId = 'gallery-' + Math.random().toString(36).substr(2, 9);
+
+		var html = '';
+
+		if (layout === 'grid') {
+			// Grid layout with CSS Grid
+			var gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(' + thumbnailWidth + 'px, 1fr)); gap: 10px;';
+			html += '<div class="atdw-meta-gallery atdw-gallery-grid atdw-gallery-columns-' + columns + '" style="' + gridStyle + '">';
+
+			// Grid: use width and height from settings
+			var thumbnailStyles = 'width: 100%; height: ' + thumbnailHeight + 'px; object-fit: cover; display: block;';
 
 			for (var i = 0; i < images.length; i++) {
-				var imageUrl = images[i];
+				var imageItem = images[i];
+				// Support both object format {url, altText} and legacy string format
+				var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
+				var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
+
 				if (imageUrl) {
 					// Strip query string
 					imageUrl = imageUrl.split('?')[0];
 
-					// Apply size parameter for thumbnail (you can expand this)
-					var displayUrl = imageUrl;
-					if (size === 'thumbnail') {
-						displayUrl = imageUrl.replace(/\.(jpg|jpeg|png|gif)$/i, '-thumb.$1');
-					}
+					// Create full-size URL with width and height parameters for lightbox (only if values are valid)
+					var fullImageParams = [];
+					if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
+					if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
+					var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
+
+					// Create thumbnail URL with width and height parameters (only if values are valid)
+					var thumbnailParams = [];
+					if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
+					if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
+					var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
 
 					html += '<div class="atdw-gallery-item">';
-					if (link) {
-						html += '<a href="' + ATDWLive.escapeHtml(imageUrl) + '" target="_blank" class="atdw-gallery-link">';
-					}
-					html += '<img src="' + ATDWLive.escapeHtml(displayUrl) + '" alt="' + ATDWLive.escapeHtml(altText + ' - Image ' + (i + 1)) + '" loading="lazy" />';
-					if (link) {
-						html += '</a>';
-					}
+					html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
+					html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + thumbnailStyles + '" loading="lazy" />';
+					html += '</a>';
 					html += '</div>';
 				}
 			}
 
 			html += '</div>';
-			return html;
-		},
+		} else {
+			// Inline layout (default) - simple display with inline-block
+			html += '<div class="atdw-meta-gallery atdw-gallery-inline" style="display: flex; flex-wrap: wrap; gap: 10px;">';
+
+			// Inline: use max-width and max-height from settings, maintain aspect ratio (only if values are valid)
+			var inlineStyleParts = [];
+			if (thumbnailWidth > 0) inlineStyleParts.push('max-width: ' + thumbnailWidth + 'px');
+			if (thumbnailHeight > 0) inlineStyleParts.push('max-height: ' + thumbnailHeight + 'px');
+			inlineStyleParts.push('height: auto');
+			inlineStyleParts.push('display: block');
+			var inlineStyles = inlineStyleParts.join('; ') + ';';
+
+			for (var i = 0; i < images.length; i++) {
+				var imageItem = images[i];
+				// Support both object format {url, altText} and legacy string format
+				var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
+				var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
+
+				if (imageUrl) {
+					// Strip query string
+					imageUrl = imageUrl.split('?')[0];
+
+					// Create full-size URL with width and height parameters for lightbox (only if values are valid)
+					var fullImageParams = [];
+					if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
+					if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
+					var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
+
+					// Create thumbnail URL with width and height parameters (only if values are valid)
+					var thumbnailParams = [];
+					if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
+					if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
+					var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
+
+					html += '<div class="atdw-gallery-item" style="flex: 0 0 auto;">';
+					html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
+					html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + inlineStyles + '" loading="lazy" />';
+					html += '</a>';
+					html += '</div>';
+				}
+			}
+
+			html += '</div>';
+		}
+
+		return html;
+	},
+
 
 		/**
 		 * Render single image
@@ -425,17 +600,32 @@
 			// Strip query string
 			imageUrl = imageUrl.split('?')[0];
 
-			// Apply size parameter
+			// Get gallery settings from atdwLive config
+			var galleryWidth = (atdwLive.galleryWidth || 600) + 'px';
+			var galleryHeight = (atdwLive.galleryHeight || 400) + 'px';
+			var thumbnailWidth = (atdwLive.thumbnailWidth || 150) + 'px';
+			var thumbnailHeight = (atdwLive.thumbnailHeight || 150) + 'px';
+
+			// Determine image styles based on size parameter
+			var imageStyles = '';
 			var displayUrl = imageUrl;
+
 			if (size === 'thumbnail') {
-				displayUrl = imageUrl.replace(/\.(jpg|jpeg|png|gif)$/i, '-thumb.$1');
+				// Apply thumbnail dimensions from settings
+				imageStyles = 'width: ' + thumbnailWidth + '; height: ' + thumbnailHeight + '; object-fit: cover;';
+			} else if (size === 'full' || size === 'large') {
+				// Apply full gallery dimensions from settings
+				imageStyles = 'width: ' + galleryWidth + '; height: ' + galleryHeight + '; object-fit: cover;';
+			} else {
+				// Medium size (default) - use gallery dimensions
+				imageStyles = 'width: ' + galleryWidth + '; height: ' + galleryHeight + '; object-fit: cover;';
 			}
 
 			var html = '<div class="atdw-meta-image">';
 			if (link) {
 				html += '<a href="' + ATDWLive.escapeHtml(imageUrl) + '" target="_blank" class="atdw-image-link">';
 			}
-			html += '<img src="' + ATDWLive.escapeHtml(displayUrl) + '" alt="' + ATDWLive.escapeHtml(altText) + '" />';
+			html += '<img src="' + ATDWLive.escapeHtml(displayUrl) + '" alt="' + ATDWLive.escapeHtml(altText) + '" style="' + imageStyles + '" />';
 			if (link) {
 				html += '</a>';
 			}
@@ -560,7 +750,55 @@
 				$products.before($resultsCount);
 			}
 
-			$resultsCount.html('Found <strong>' + totalResults + '</strong> ' + resultsText).show();
+		// Build results count HTML with inline navigation
+		var currentPage = $container.data('current-page') || 1;
+		var pageSize = $container.data('params').size || 12;
+		var showPagination = $container.data('show-pagination') === 'yes';
+
+		// Determine if there are more pages based on products returned
+		// If we got a full page of results, there might be more
+		var hasMore = products.length >= pageSize;
+
+		// Check if we have previous or next pages
+		var hasPrevious = currentPage > 1;
+		var hasNext = hasMore;
+
+		// If we have totalResults from API, use it to calculate exact hasNext
+		if (data.numberOfResults && data.numberOfResults > 0) {
+			var totalPages = Math.ceil(data.numberOfResults / pageSize);
+			hasNext = currentPage < totalPages;
+		}
+
+		var resultsHtml = '<span class="atdw-results-text">Found <strong>' + totalResults + '</strong> ' + resultsText + '</span>';
+
+		// Add inline prev/next buttons if pagination is enabled and there are pages to navigate
+		if (showPagination && (hasPrevious || hasNext)) {
+			resultsHtml += '<span class="atdw-results-nav">';
+
+			// Previous button - only show if there are previous pages
+			if (hasPrevious) {
+				resultsHtml += '<button class="atdw-results-prev" data-page="' + (currentPage - 1) + '">← Previous</button>';
+			}
+
+			// Next button - only show if there are next pages
+			if (hasNext) {
+				resultsHtml += '<button class="atdw-results-next" data-page="' + (currentPage + 1) + '">Next →</button>';
+			}
+
+			resultsHtml += '</span>';
+		}
+
+		$resultsCount.html(resultsHtml).show();
+
+		// Attach click handlers to inline navigation buttons
+		$resultsCount.find('.atdw-results-prev, .atdw-results-next').on('click', function() {
+			var page = parseInt($(this).data('page'));
+			if ($container.data('is-search-result')) {
+				ATDWLive.loadSearchPage($container, page);
+			} else {
+				ATDWLive.loadPage($container, page);
+			}
+		});
 
 			var html = '';
 
@@ -719,7 +957,8 @@
 			}
 
 			if (product.websiteUrl) {
-				html += '<div class="atdw-meta-item"><strong>Website:</strong> <a href="' + product.websiteUrl + '" target="_blank">' + this.escapeHtml(product.websiteUrl) + '</a></div>';
+				var websiteUrl = ATDWLive.ensureUrlProtocol(product.websiteUrl);
+				html += '<div class="atdw-meta-item"><strong>Website:</strong> <a href="' + this.escapeHtml(websiteUrl) + '" target="_blank">' + this.escapeHtml(product.websiteUrl) + '</a></div>';
 			}
 
 			html += '</div>'; // meta
@@ -1035,10 +1274,14 @@
 			var $loading = $container.find('.atdw-live-loading');
 			var $products = $container.find('.atdw-live-products');
 			var $error = $container.find('.atdw-live-error');
+			var $pagination = $container.find('.atdw-pagination');
+			var $resultsCount = $container.find('.atdw-results-count');
 
 			$loading.show();
 			$products.empty();
 			$error.hide();
+			$pagination.hide();
+			$resultsCount.hide();
 
 			$.ajax({
 				url: atdwLive.ajaxUrl,
@@ -1060,9 +1303,6 @@
 							products = [products];
 						}
 
-						// Display products with full response data (including numberOfResults)
-						ATDWLive.displayProducts(response.data, $container);
-
 						// Store total results for pagination info
 						if (response.data.numberOfResults) {
 							$container.data('total-results', response.data.numberOfResults);
@@ -1070,6 +1310,9 @@
 
 						// Update current page
 						$container.data('current-page', page);
+
+						// Display products with full response data (including numberOfResults)
+						ATDWLive.displayProducts(response.data, $container);
 
 						// Update pagination display
 						// If we got less than requested size, we're on the last page
@@ -1096,43 +1339,104 @@
 		/**
 		 * Update pagination display
 		 */
-		updatePaginationDisplay: function($container, hasMore) {
-			var $pagination = $container.find('.atdw-pagination');
-			var $prevBtn = $pagination.find('.atdw-prev-page');
-			var $nextBtn = $pagination.find('.atdw-next-page');
-			var $currentPage = $pagination.find('.atdw-current-page');
-			var $totalPages = $pagination.find('.atdw-total-pages');
-			var $pageSeparator = $pagination.find('.atdw-page-separator');
+	/**
+	 * Update pagination display
+	 */
+	updatePaginationDisplay: function($container, hasMore) {
+		var $pagination = $container.find('.atdw-pagination');
+		var currentPage = $container.data('current-page') || 1;
+		var pageSize = $container.data('params').size || 12;
+		var totalResults = $container.data('total-results') || 0;
+		var paginationType = $container.data('pagination-type') || 'number';
 
-			var currentPage = $container.data('current-page') || 1;
-			var pageSize = $container.data('params').size || 12;
-			var totalResults = $container.data('total-results') || 0;
+		// Clear existing pagination content
+		$pagination.empty();
 
-			// Update current page display
-			$currentPage.text(currentPage);
+		// Hide pagination if total results <= page size OR if on page 1 with no more pages
+		if (totalResults > 0 && totalResults <= pageSize) {
+			$pagination.hide();
+			return;
+		} else if (currentPage === 1 && !hasMore) {
+			$pagination.hide();
+			return;
+		}
 
-			// Since ATDW API doesn't provide total count, hide total pages
-			$pageSeparator.hide();
-			$totalPages.hide();
+		if (paginationType === 'prevnext') {
+			// Render prev/next style pagination
+			var prevDisabled = currentPage <= 1 ? ' disabled' : '';
+			var nextDisabled = !hasMore ? ' disabled' : '';
 
-			// Enable/disable buttons
-			$prevBtn.prop('disabled', currentPage <= 1);
+			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + '← Previous' + '</button>';
+			html += '<span class="atdw-page-info">Page <span class="atdw-current-page">' + currentPage + '</span></span>';
+			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next →' + '</button>';
 
-			// Disable next if we got less than requested (indicates last page)
-			$nextBtn.prop('disabled', !hasMore);
+			$pagination.html(html).show();
 
-			// Hide pagination if total results <= page size OR if on page 1 with no more pages
-			if (totalResults > 0 && totalResults <= pageSize) {
-				// If we know total results and it's less than a page, hide pagination
-				$pagination.hide();
-			} else if (currentPage === 1 && !hasMore) {
-				// If on first page and no more results, hide pagination
-				$pagination.hide();
+			// Attach click handlers for prev/next buttons
+			$pagination.find('.atdw-prev-page').on('click', function() {
+				if (currentPage > 1) {
+					ATDWLive.loadPage($container, currentPage - 1);
+				}
+			});
+
+			$pagination.find('.atdw-next-page').on('click', function() {
+				if (hasMore) {
+					ATDWLive.loadPage($container, currentPage + 1);
+				}
+			});
+		} else {
+			// Render number style pagination (inline numbers without prev/next)
+			var html = '<div class="atdw-page-numbers">';
+
+			// Calculate total number of pages based on results
+			var totalPages = 0;
+			if (totalResults > 0 && pageSize > 0) {
+				totalPages = Math.ceil(totalResults / pageSize);
+			} else if (hasMore) {
+				// If we don't know total results but hasMore is true, estimate
+				totalPages = currentPage + 1; // At least one more page
 			} else {
-				// Otherwise show pagination
-				$pagination.show();
+				// Current page is the last page
+				totalPages = currentPage;
 			}
-		},
+
+			// Calculate page range to display (show 5 pages at a time)
+			var maxPagesToShow = 5;
+			var startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+			var endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+			// Adjust startPage if we're near the end
+			if (endPage - startPage + 1 < maxPagesToShow) {
+				startPage = Math.max(1, endPage - maxPagesToShow + 1);
+			}
+
+			// Show previous pages if available
+			if (currentPage > 1) {
+				for (var i = startPage; i < currentPage; i++) {
+					html += '<button class="atdw-page-number" data-page="' + i + '">' + i + '</button>';
+				}
+			}
+
+			// Current page (highlighted)
+			html += '<button class="atdw-page-number atdw-current" data-page="' + currentPage + '">' + currentPage + '</button>';
+
+			// Show next pages if available
+			for (var i = currentPage + 1; i <= endPage; i++) {
+				html += '<button class="atdw-page-number" data-page="' + i + '">' + i + '</button>';
+			}
+
+			html += '</div>';
+			$pagination.html(html).show();
+
+			// Attach click handlers to page number buttons
+			$pagination.find('.atdw-page-number').on('click', function() {
+				var page = parseInt($(this).data('page'));
+				if (page !== currentPage) {
+					ATDWLive.loadPage($container, page);
+				}
+			});
+		}
+	},
 
 		/**
 		 * Load search results page
@@ -1150,10 +1454,14 @@
 			var $loading = $container.find('.atdw-live-loading');
 			var $products = $container.find('.atdw-live-products');
 			var $error = $container.find('.atdw-live-error');
+			var $pagination = $container.find('.atdw-pagination');
+			var $resultsCount = $container.find('.atdw-results-count');
 
 			$loading.show();
 			$products.empty();
 			$error.hide();
+			$pagination.hide();
+			$resultsCount.hide();
 
 			// Fetch products with search params
 			$.ajax({
@@ -1169,15 +1477,22 @@
 					$loading.hide();
 
 					if (response.success && response.data) {
-						ATDWLive.displayProducts(response.data, $container);
-
 						var products = response.data.products || response.data.product || [];
 						if (!Array.isArray(products)) {
 							products = [products];
 						}
 
-						// Update current page
+				// Store total results for pagination info
+				if (response.data.numberOfResults) {
+					$container.data('total-results', response.data.numberOfResults);
+				}
+
+				// Update current page BEFORE displaying products (so inline nav buttons get correct page)
 						$container.data('search-current-page', page);
+				$container.data('current-page', page);
+
+				// Display products
+						ATDWLive.displayProducts(response.data, $container);
 
 						// Check if there are more results
 						var hasMore = products.length >= searchParams.size;
@@ -1202,33 +1517,97 @@
 		/**
 		 * Update pagination for search results
 		 */
-		updateSearchPagination: function($container, currentPage, hasMore, pageSize) {
-			var $pagination = $container.find('.atdw-pagination');
-			var $prevBtn = $pagination.find('.atdw-prev-page');
-			var $nextBtn = $pagination.find('.atdw-next-page');
-			var $currentPage = $pagination.find('.atdw-current-page');
-			var $pageSeparator = $pagination.find('.atdw-page-separator');
-			var $totalPages = $pagination.find('.atdw-total-pages');
+	updateSearchPagination: function($container, currentPage, hasMore, pageSize) {
+		var $pagination = $container.find('.atdw-pagination');
+		var paginationType = $container.data('pagination-type') || 'number';
 
-			// Update current page display
-			$currentPage.text(currentPage);
+		// Clear existing pagination content
+		$pagination.empty();
 
-			// Hide "of X" text since we don't know total pages
-			$pageSeparator.hide();
-			$totalPages.hide();
+		// Always show pagination for search results if there's more than one page
+		if (currentPage === 1 && !hasMore) {
+			// Only one page of results
+			$pagination.hide();
+			return;
+		}
 
-			// Enable/disable buttons
-			$prevBtn.prop('disabled', currentPage <= 1);
-			$nextBtn.prop('disabled', !hasMore);
+		if (paginationType === 'prevnext') {
+			// Render prev/next style pagination
+			var prevDisabled = currentPage <= 1 ? ' disabled' : '';
+			var nextDisabled = !hasMore ? ' disabled' : '';
 
-			// Always show pagination for search results if there's more than one page
-			if (currentPage === 1 && !hasMore) {
-				// Only one page of results
-				$pagination.hide();
+			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + '← Previous' + '</button>';
+			html += '<span class="atdw-page-info">Page <span class="atdw-current-page">' + currentPage + '</span></span>';
+			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next →' + '</button>';
+
+			$pagination.html(html).show();
+
+			// Attach click handlers for prev/next buttons
+			$pagination.find('.atdw-prev-page').on('click', function() {
+				if (currentPage > 1) {
+					ATDWLive.loadSearchPage($container, currentPage - 1);
+				}
+			});
+
+			$pagination.find('.atdw-next-page').on('click', function() {
+				if (hasMore) {
+					ATDWLive.loadSearchPage($container, currentPage + 1);
+				}
+			});
+		} else {
+			// Render number style pagination (inline numbers without prev/next)
+			var html = '<div class="atdw-page-numbers">';
+
+			// Calculate total number of pages based on results
+			var totalPages = 0;
+			var totalResults = $container.data('total-results') || 0;
+			if (totalResults > 0 && pageSize > 0) {
+				totalPages = Math.ceil(totalResults / pageSize);
+			} else if (hasMore) {
+				// If we don't know total results but hasMore is true, estimate
+				totalPages = currentPage + 1; // At least one more page
 			} else {
-				$pagination.show();
+				// Current page is the last page
+				totalPages = currentPage;
 			}
-		},
+
+			// Calculate page range to display (show 5 pages at a time)
+			var maxPagesToShow = 5;
+			var startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+			var endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+			// Adjust startPage if we're near the end
+			if (endPage - startPage + 1 < maxPagesToShow) {
+				startPage = Math.max(1, endPage - maxPagesToShow + 1);
+			}
+
+			// Show previous pages if available
+			if (currentPage > 1) {
+				for (var i = startPage; i < currentPage; i++) {
+					html += '<button class="atdw-page-number" data-page="' + i + '">' + i + '</button>';
+				}
+			}
+
+			// Current page (highlighted)
+			html += '<button class="atdw-page-number atdw-current" data-page="' + currentPage + '">' + currentPage + '</button>';
+
+			// Show next pages if available
+			for (var i = currentPage + 1; i <= endPage; i++) {
+				html += '<button class="atdw-page-number" data-page="' + i + '">' + i + '</button>';
+			}
+
+			html += '</div>';
+			$pagination.html(html).show();
+
+			// Attach click handlers to page number buttons
+			$pagination.find('.atdw-page-number').on('click', function() {
+				var page = parseInt($(this).data('page'));
+				if (page !== currentPage) {
+					ATDWLive.loadSearchPage($container, page);
+				}
+			});
+		}
+	},
 
 		/**
 		 * Map sort parameter to ATDW API order value
@@ -1269,12 +1648,328 @@
 		nl2br: function(text) {
 			if (!text) return '';
 			return String(text).replace(/\n/g, '<br>');
+		},
+
+	/**
+	 * Initialize or reinitialize GLightbox for dynamically loaded content
+	 */
+	initGLightbox: function() {
+		if (typeof GLightbox !== 'undefined') {
+			// Destroy existing instance if it exists
+			if (window.atdwLightbox) {
+				window.atdwLightbox.destroy();
+			}
+
+			// Create new instance
+			window.atdwLightbox = GLightbox({
+				touchNavigation: true,
+				loop: true,
+				autoplayVideos: true
+			});
 		}
+	},
+
+	/**
+	 * Extract formatted address from addresses array
+	 * Combines addressLine1, cityName, stateName, and addressPostalCode
+	 */
+	extractFormattedAddress: function(product) {
+		if (!product.addresses || !Array.isArray(product.addresses) || product.addresses.length === 0) {
+			return null;
+		}
+
+		var address = product.addresses[0];
+		var parts = [];
+
+		// Add addressLine1 with comma if present
+		if (address.addressLine1) {
+			parts.push(address.addressLine1 + ',');
+		}
+		if (address.cityName) parts.push(address.cityName);
+		if (address.stateName) parts.push(address.stateName);
+		if (address.addressPostalCode) parts.push(address.addressPostalCode);
+
+		return parts.length > 0 ? parts.join(' ') : null;
+	},
+
+	/**
+	 * Extract map coordinates from addresses array
+	 * Returns object with latitude and longitude
+	 */
+	extractMapCoordinates: function(product) {
+		if (!product.addresses || !Array.isArray(product.addresses) || product.addresses.length === 0) {
+			return null;
+		}
+
+		var address = product.addresses[0];
+
+		if (address.geocodeGdaLatitude && address.geocodeGdaLongitude) {
+			return {
+				latitude: address.geocodeGdaLatitude,
+				longitude: address.geocodeGdaLongitude
+			};
+		}
+
+		return null;
+	},
+
+	/**
+	 * Extract gallery images from multimedia array
+	 * Gets first occurrence of each unique multimediaId, extracts serverPath and altText, and removes query string
+	 * Only includes items where attributeIdMultimediaContent is 'IMAGE'
+	 */
+	extractGalleryFromMultimedia: function(product) {
+		if (!product.multimedia || !Array.isArray(product.multimedia) || product.multimedia.length === 0) {
+			return null;
+		}
+
+		var seenIds = {};
+		var gallery = [];
+
+		for (var i = 0; i < product.multimedia.length; i++) {
+			var item = product.multimedia[i];
+
+			// Check if this multimedia item has multimediaId, serverPath, and is an IMAGE
+			if (item.multimediaId && item.serverPath && item.attributeIdMultimediaContent === 'IMAGE') {
+				// Only add if we haven't seen this multimediaId before (first occurrence only)
+				if (!seenIds[item.multimediaId]) {
+					seenIds[item.multimediaId] = true;
+
+					// Extract serverPath and remove query string (everything after ?)
+					var cleanPath = item.serverPath.split('?')[0];
+
+					// Store both URL and altText
+					gallery.push({
+						url: cleanPath,
+						altText: item.altText || ''
+					});
+				}
+			}
+		}
+
+		return gallery.length > 0 ? gallery : null;
+	},
+
+	/**
+	 * Extract phone number from communication array
+	 * Looks for attributeIdCommunication === 'CAPHENQUIR'
+	 */
+	extractPhoneFromCommunication: function(product) {
+		if (!product.communication || !Array.isArray(product.communication)) {
+			return null;
+		}
+
+		var phoneEntry = product.communication.find(function(item) {
+			return item.attributeIdCommunication === 'CAPHENQUIR';
+		});
+
+		return phoneEntry ? phoneEntry.communicationDetail : null;
+	},
+
+	/**
+	 * Extract email from communication array
+	 * Looks for attributeIdCommunication === 'CAEMENQUIR'
+	 */
+	extractEmailFromCommunication: function(product) {
+		if (!product.communication || !Array.isArray(product.communication)) {
+			return null;
+		}
+
+		var emailEntry = product.communication.find(function(item) {
+			return item.attributeIdCommunication === 'CAEMENQUIR';
+		});
+
+		return emailEntry ? emailEntry.communicationDetail : null;
+	},
+
+	/**
+	 * Extract website URL from communication array
+	 * Looks for attributeIdCommunication === 'CAURENQUIR'
+	 */
+	extractWebsiteFromCommunication: function(product) {
+		if (!product.communication || !Array.isArray(product.communication)) {
+			return null;
+		}
+
+		var websiteEntry = product.communication.find(function(item) {
+			return item.attributeIdCommunication === 'CAURENQUIR';
+		});
+
+		return websiteEntry ? websiteEntry.communicationDetail : null;
+	},
+
+	/**
+	 * Extract attributes by type ID from attributes array
+	 * Filters by attributeTypeId and returns array of attributeIdDescription values
+	 */
+	extractAttributesByType: function(product, attributeTypeId) {
+		if (!product.attributes || !Array.isArray(product.attributes) || product.attributes.length === 0) {
+			return null;
+		}
+
+		if (!attributeTypeId) {
+			return null;
+		}
+
+		var descriptions = [];
+
+		for (var i = 0; i < product.attributes.length; i++) {
+			var attr = product.attributes[i];
+
+			// Match attributeTypeId and extract attributeIdDescription
+			if (attr.attributeTypeId === attributeTypeId && attr.attributeIdDescription) {
+				descriptions.push(attr.attributeIdDescription);
+			}
+		}
+
+		return descriptions.length > 0 ? descriptions : null;
+	},
+
+	/**
+	 * Ensure URL has http:// or https:// protocol
+	 * If URL doesn't start with a protocol, adds https://
+	 */
+	ensureUrlProtocol: function(url) {
+		if (!url) return url;
+
+		// Trim whitespace
+		url = String(url).trim();
+
+		// Check if URL already has a protocol
+		if (/^https?:\/\//i.test(url)) {
+			return url;
+		}
+
+		// Add https:// if no protocol present
+		return 'https://' + url;
+	},
+
+	/**
+	 * Initialize Google Maps JavaScript API
+	 * Creates interactive map with controls and map/satellite toggle
+	 */
+	initGoogleMap: function(mapId, latitude, longitude, zoom, productName, apiKey) {
+		// Queue this map for initialization
+		if (!window.atdwPendingMaps) {
+			window.atdwPendingMaps = [];
+		}
+		window.atdwPendingMaps.push({
+			id: mapId,
+			lat: latitude,
+			lng: longitude,
+			zoom: zoom,
+			name: productName
+		});
+
+		// Load Google Maps API if not already loaded
+		if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+			// Check if script is already being loaded
+			if (!window.atdwGoogleMapsLoading) {
+				window.atdwGoogleMapsLoading = true;
+
+				// Define callback function globally
+				window.initAtdwMaps = function() {
+					window.atdwGoogleMapsLoaded = true;
+					window.atdwGoogleMapsLoading = false;
+					// Initialize all pending maps
+					if (window.atdwPendingMaps) {
+						window.atdwPendingMaps.forEach(function(mapData) {
+							ATDWLive.createMap(mapData.id, mapData.lat, mapData.lng, mapData.zoom, mapData.name);
+						});
+						window.atdwPendingMaps = [];
+					}
+				};
+
+				var script = document.createElement('script');
+				script.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&loading=async&callback=initAtdwMaps&libraries=marker';
+				script.async = true;
+				script.defer = true;
+				document.head.appendChild(script);
+			}
+			// If already loading, the callback will handle all pending maps
+		} else {
+			// Google Maps API is already loaded, initialize immediately
+			ATDWLive.createMap(mapId, latitude, longitude, zoom, productName);
+		}
+	},
+
+	/**
+	 * Create Google Map instance with controls
+	 * Uses AdvancedMarkerElement for better performance and features
+	 */
+	createMap: function(mapId, latitude, longitude, zoom, productName) {
+		// Wait for DOM element to be available
+		setTimeout(function() {
+			var mapElement = document.getElementById(mapId);
+			if (!mapElement) {
+				console.error('ATDW: Map element not found:', mapId);
+				return;
+			}
+
+			// Ensure the map container has explicit height
+			if (!mapElement.style.height || mapElement.style.height === '0px' || mapElement.style.height === '') {
+				mapElement.style.height = '400px';
+			}
+			mapElement.style.display = 'block';
+
+			var lat = parseFloat(latitude);
+			var lng = parseFloat(longitude);
+			var zoomLevel = parseInt(zoom) || 15;
+
+			// Create map with controls and mapId for advanced markers
+			var map = new google.maps.Map(mapElement, {
+				center: { lat: lat, lng: lng },
+				zoom: zoomLevel,
+				mapId: 'ATDW_MAP_' + mapId, // Required for AdvancedMarkerElement
+				mapTypeControl: true,
+				mapTypeControlOptions: {
+					style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+					position: google.maps.ControlPosition.TOP_RIGHT,
+					mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain']
+				},
+				zoomControl: true,
+				zoomControlOptions: {
+					position: google.maps.ControlPosition.RIGHT_CENTER
+				},
+				scaleControl: true,
+				streetViewControl: true,
+				streetViewControlOptions: {
+					position: google.maps.ControlPosition.RIGHT_CENTER
+				},
+				fullscreenControl: true,
+				fullscreenControlOptions: {
+					position: google.maps.ControlPosition.RIGHT_TOP
+				}
+			});
+
+			// Create marker using AdvancedMarkerElement if available, fallback to standard Marker
+			if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+				// Use new AdvancedMarkerElement
+				new google.maps.marker.AdvancedMarkerElement({
+					position: { lat: lat, lng: lng },
+					map: map,
+					title: productName
+				});
+			} else {
+				// Fallback to standard Marker (for older API versions)
+				new google.maps.Marker({
+					position: { lat: lat, lng: lng },
+					map: map,
+					title: productName
+				});
+			}
+		}, 100);
+	}
 	};
 
 	// Initialize on document ready
 	$(document).ready(function() {
 		ATDWLive.init();
+
+		// Initialize GLightbox for all galleries
+		if (typeof GLightbox !== 'undefined') {
+			ATDWLive.initGLightbox(); // Initialize GLightbox using our wrapper
+		}
 	});
 
 })(jQuery);
