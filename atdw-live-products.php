@@ -115,6 +115,9 @@ final class ATDW_Live_Products {
 			'atdw_live_api_base_url'   => 'https://atlas.atdw-online.com.au/api/atlas',
 			'atdw_live_market_variant' => 'ENGLISH',
 			'atdw_live_output_format'  => 'json',
+			'atdw_live_gallery_width'  => 600,
+			'atdw_live_gallery_height' => 400,
+			'atdw_live_thumbnail_size' => 150,
 		);
 
 		foreach ( $defaults as $key => $value ) {

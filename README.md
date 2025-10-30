@@ -71,6 +71,24 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
    - **Market Variant**: Choose language (English, Chinese Simplified, Chinese Traditional)
    - **Output Format**: JSON (recommended) or XML
 
+### Google Maps Settings
+
+To enable interactive Google Maps embeds in the `atdw_live_meta` shortcode (when using `key="map"`):
+
+1. Navigate to **ATDW Live > Settings**
+2. Scroll to the **Google Maps Settings** section
+3. Enter your **Google Maps API Key**:
+   - Obtain an API key from the [Google Cloud Console](https://console.cloud.google.com/)
+   - Enable the **Maps Embed API** for your project
+   - Copy the API key to the plugin settings
+4. (Optional) Configure the **Google Maps Base URL** if needed (default: `https://www.google.com/maps/embed/v1/place`)
+
+**Without Google Maps API Key:**
+If no API key is configured, the map shortcode will display coordinates with a text link to Google Maps as a fallback.
+
+**With Google Maps API Key:**
+When configured, the map shortcode will display an interactive embedded Google Map with customizable dimensions and zoom level.
+
 ## Usage
 
 ### Shortcodes
@@ -195,10 +213,13 @@ The fetched data is cached, so subsequent requests for the same product (even on
 **Supported Meta Keys:**
 - `name` or `title` - Product name
 - `description` - Product description
-- `phone` - Phone number (automatically linked with tel:)
-- `email` - Email address (automatically linked with mailto:)
-- `website` - Website URL (automatically linked)
-- `address` - Physical address
+- `phone` - **ENHANCED:** Phone number (automatically linked with tel:) - **Now prioritizes `communication` array with attributeIdCommunication='CAPHENQUIR', falls back to direct phone field**
+- `email` - **ENHANCED:** Email address (automatically linked with mailto:) - **Now prioritizes `communication` array with attributeIdCommunication='CAEMENQUIR', falls back to direct email field**
+- `website` - **ENHANCED:** Website URL (automatically linked) - **Now prioritizes `communication` array with attributeIdCommunication='CAURENQUIR', falls back to websiteUrl field**
+- `address` - **NEW:** Formatted physical address (automatically combines addressLine1, cityName, stateName, and addressPostalCode from addresses array)
+- `map` - **NEW & ENHANCED:** Interactive Google Maps embed (extracts geocodeGdaLatitude and geocodeGdaLongitude from addresses array, automatically embeds Google Maps if API key is configured, otherwise shows coordinates with link to Google Maps)
+  - **Parameters:** `map_width` (default: 100%), `map_height` (default: 400px), `map_zoom` (default: 15)
+  - **Requires:** Google Maps API key (set in plugin settings)
 - `locality` - Suburb/locality
 - `area` - Area/region
 - `state` - State
@@ -209,6 +230,14 @@ The fetched data is cached, so subsequent requests for the same product (even on
 - `price` or `rate` - Price (formatted with $ symbol)
 
 You can also use any API field name directly (e.g., `productName`, `productDescription`, `websiteUrl`, etc.)
+
+**Communication Array Priority:**
+The plugin now intelligently extracts phone, email, and website information from the `communication` array in the API response, using specific attribute IDs:
+- **Phone**: Looks for `attributeIdCommunication='CAPHENQUIR'` (Primary Phone)
+- **Email**: Looks for `attributeIdCommunication='CAEMENQUIR'` (Email Enquiries)
+- **Website**: Looks for `attributeIdCommunication='CAURENQUIR'` (URL Enquiries)
+
+If these are not found in the communication array, the plugin will fall back to the traditional direct field approach.
 
 **Examples:**
 
@@ -237,8 +266,20 @@ Using URL query parameter (recommended for detail pages):
 <!-- Display featured image -->
 [atdw_live_meta key="image" size="large"]
 
-<!-- Display address with custom formatting -->
+<!-- Display formatted address (combines all address fields) -->
 [atdw_live_meta key="address" before="<strong>Location:</strong> "]
+
+<!-- Display map with default settings (100% width, 400px height, zoom 15) -->
+[atdw_live_meta key="map"]
+
+<!-- Display map with custom dimensions -->
+[atdw_live_meta key="map" map_width="600px" map_height="450px"]
+
+<!-- Display map with custom zoom level -->
+[atdw_live_meta key="map" map_zoom="12"]
+
+<!-- Display map with all custom parameters -->
+[atdw_live_meta key="map" map_width="100%" map_height="500px" map_zoom="17"]
 
 <!-- Display website -->
 [atdw_live_meta key="website"]
@@ -268,9 +309,15 @@ Create a product detail page template (e.g., `/detail`) and add these shortcodes
     [atdw_live_meta key="email" before="<strong>Email:</strong> "]
     [atdw_live_meta key="website" before="<strong>Website:</strong> "]
   </div>
+  <div class="location-details">
+    [atdw_live_meta key="address" before="<strong>Address:</strong> "]
+    [atdw_live_meta key="map" before="<strong>Coordinates:</strong> "]
+  </div>
 </div>
 ```
 Then link to products using: `/detail?id=PRODUCT_ID`
+
+**Note:** The `map` shortcode outputs coordinates with data attributes (`data-lat` and `data-lng`) that can be easily integrated with mapping libraries like Google Maps, Leaflet, or Mapbox.
 
 **Special Considerations for Gallery:**
 The gallery key renders images in a responsive grid layout with the following features:
@@ -450,6 +497,12 @@ For issues, questions, or contributions:
 - Enhanced CSS styling for meta field display
 - Simplified product detail page creation with automatic ID detection
 - Efficient rendering: multiple meta shortcodes for same product only trigger one API request
+- **NEW:** Added `address` meta key - automatically extracts and formats address from API addresses array (combines addressLine1, cityName, stateName, addressPostalCode)
+- **NEW:** Added `map` meta key - extracts geocode coordinates from addresses array and displays interactive Google Maps embed
+- **NEW:** Google Maps integration with customizable parameters (map_width, map_height, map_zoom)
+- **NEW:** Communication array priority - phone, email, and website meta keys now prioritize data from communication array with specific attribute IDs (CAPHENQUIR, CAEMENQUIR, CAURENQUIR)
+- **NEW:** Graceful fallback for maps - displays coordinates with Google Maps link if no API key is configured
+- Enhanced data extraction from nested API structures (addresses array, communication array)
 
 ### Version 1.1.0
 - Added `fl` (Field List) parameter to control API response fields

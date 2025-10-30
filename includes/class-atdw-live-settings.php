@@ -44,17 +44,21 @@ class ATDW_Live_Settings {
 	 */
 	private function load_settings() {
 		$this->settings = array(
-			'atdw_live_api_key'        => get_option( 'atdw_live_api_key', '' ),
-			'atdw_live_api_base_url'   => get_option( 'atdw_live_api_base_url', 'https://atlas.atdw-online.com.au/api/atlas' ),
-			'atdw_live_org_name'       => get_option( 'atdw_live_org_name', '' ),
-			'atdw_live_org_number'     => get_option( 'atdw_live_org_number', '' ),
-			'atdw_live_market_variant' => get_option( 'atdw_live_market_variant', 'ENGLISH' ),
-			'atdw_live_output_format'  => get_option( 'atdw_live_output_format', 'json' ),
-			'atdw_live_cache_enabled'  => get_option( 'atdw_live_cache_enabled', true ),
-			'atdw_live_cache_ttl'      => get_option( 'atdw_live_cache_ttl', 3600 ),
-			'atdw_live_custom_css'     => get_option( 'atdw_live_custom_css', '' ),
-			'atdw_live_gmaps_api_key'  => get_option( 'atdw_live_gmaps_api_key', '' ),
-			'atdw_live_gmaps_base_url' => get_option( 'atdw_live_gmaps_base_url', 'https://maps.googleapis.com/maps/api/js' ),
+			'atdw_live_api_key'          => get_option( 'atdw_live_api_key', '' ),
+			'atdw_live_api_base_url'     => get_option( 'atdw_live_api_base_url', 'https://atlas.atdw-online.com.au/api/atlas' ),
+			'atdw_live_org_name'         => get_option( 'atdw_live_org_name', '' ),
+			'atdw_live_org_number'       => get_option( 'atdw_live_org_number', '' ),
+			'atdw_live_market_variant'   => get_option( 'atdw_live_market_variant', 'ENGLISH' ),
+			'atdw_live_output_format'    => get_option( 'atdw_live_output_format', 'json' ),
+			'atdw_live_cache_enabled'    => get_option( 'atdw_live_cache_enabled', true ),
+			'atdw_live_cache_ttl'        => get_option( 'atdw_live_cache_ttl', 3600 ),
+			'atdw_live_custom_css'       => get_option( 'atdw_live_custom_css', '' ),
+			'atdw_live_gmaps_api_key'    => get_option( 'atdw_live_gmaps_api_key', '' ),
+			'atdw_live_gmaps_base_url'   => get_option( 'atdw_live_gmaps_base_url', 'https://maps.googleapis.com/maps/api/js' ),
+			'atdw_live_gallery_width'    => get_option( 'atdw_live_gallery_width', 600 ),
+			'atdw_live_gallery_height'   => get_option( 'atdw_live_gallery_height', 400 ),
+			'atdw_live_thumbnail_width'  => get_option( 'atdw_live_thumbnail_width', 150 ),
+			'atdw_live_thumbnail_height' => get_option( 'atdw_live_thumbnail_height', 150 ),
 		);
 	}
 
@@ -131,6 +135,31 @@ class ATDW_Live_Settings {
 			'type'              => 'string',
 			'sanitize_callback' => 'esc_url_raw',
 			'default'           => 'https://maps.googleapis.com/maps/api/js',
+		) );
+
+		// Gallery Settings
+		register_setting( 'atdw_live_gallery_settings', 'atdw_live_gallery_width', array(
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 600,
+		) );
+
+		register_setting( 'atdw_live_gallery_settings', 'atdw_live_gallery_height', array(
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 400,
+		) );
+
+		register_setting( 'atdw_live_gallery_settings', 'atdw_live_thumbnail_width', array(
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 150,
+		) );
+
+		register_setting( 'atdw_live_gallery_settings', 'atdw_live_thumbnail_height', array(
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 150,
 		) );
 	}
 
@@ -231,17 +260,21 @@ class ATDW_Live_Settings {
 	 */
 	public function reset_to_defaults() {
 		$defaults = array(
-			'atdw_live_api_key'        => '',
-			'atdw_live_api_base_url'   => 'https://atlas.atdw-online.com.au/api/atlas',
-			'atdw_live_org_name'       => '',
-			'atdw_live_org_number'     => '',
-			'atdw_live_market_variant' => 'ENGLISH',
-			'atdw_live_cache_enabled'  => true,
-			'atdw_live_cache_ttl'      => 3600,
-			'atdw_live_output_format'  => 'json',
-			'atdw_live_custom_css'     => '',
-			'atdw_live_gmaps_api_key'  => '',
-			'atdw_live_gmaps_base_url' => 'https://maps.googleapis.com/maps/api/js',
+			'atdw_live_api_key'          => '',
+			'atdw_live_api_base_url'     => 'https://atlas.atdw-online.com.au/api/atlas',
+			'atdw_live_org_name'         => '',
+			'atdw_live_org_number'       => '',
+			'atdw_live_market_variant'   => 'ENGLISH',
+			'atdw_live_cache_enabled'    => true,
+			'atdw_live_cache_ttl'        => 3600,
+			'atdw_live_output_format'    => 'json',
+			'atdw_live_custom_css'       => '',
+			'atdw_live_gmaps_api_key'    => '',
+			'atdw_live_gmaps_base_url'   => 'https://maps.googleapis.com/maps/api/js',
+			'atdw_live_gallery_width'    => 600,
+			'atdw_live_gallery_height'   => 400,
+			'atdw_live_thumbnail_width'  => 150,
+			'atdw_live_thumbnail_height' => 150,
 		);
 
 		foreach ( $defaults as $key => $value ) {

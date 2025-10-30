@@ -133,6 +133,49 @@ $output_formats = $settings->get_output_formats();
 			</table>
 		</div>
 
+		<!-- Gallery Settings -->
+		<div class="atdw-card">
+			<h2><?php esc_html_e( 'Gallery Settings', 'atdw-live-products' ); ?></h2>
+			<table class="form-table">
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_gallery_width"><?php esc_html_e( 'Gallery Image Width (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_gallery_width" name="atdw_live_gallery_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_gallery_width' ) ); ?>" class="small-text" min="100" step="1" placeholder="600" />
+						<p class="description"><?php esc_html_e( 'Width in pixels for lightbox gallery images. Default: 600', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_gallery_height"><?php esc_html_e( 'Gallery Image Height (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_gallery_height" name="atdw_live_gallery_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_gallery_height' ) ); ?>" class="small-text" min="100" step="1" placeholder="400" />
+						<p class="description"><?php esc_html_e( 'Height in pixels for lightbox gallery images. Default: 400', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_thumbnail_width"><?php esc_html_e( 'Thumbnail Width (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_thumbnail_width" name="atdw_live_thumbnail_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_thumbnail_width' ) ); ?>" class="small-text" min="50" step="1" placeholder="150" />
+						<p class="description"><?php esc_html_e( 'Width in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_thumbnail_height"><?php esc_html_e( 'Thumbnail Height (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_thumbnail_height" name="atdw_live_thumbnail_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_thumbnail_height' ) ); ?>" class="small-text" min="50" step="1" placeholder="150" />
+						<p class="description"><?php esc_html_e( 'Height in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
 		<!-- Custom CSS -->
 		<div class="atdw-card">
 			<h2><?php esc_html_e( 'Custom CSS', 'atdw-live-products' ); ?></h2>

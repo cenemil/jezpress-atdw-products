@@ -225,6 +225,23 @@ class ATDW_Live_Admin {
 			$this->settings->update( 'atdw_live_gmaps_base_url', esc_url_raw( $_POST['atdw_live_gmaps_base_url'] ) );
 		}
 
+		// Gallery Settings
+		if ( isset( $_POST['atdw_live_gallery_width'] ) ) {
+			$this->settings->update( 'atdw_live_gallery_width', absint( $_POST['atdw_live_gallery_width'] ) );
+		}
+
+		if ( isset( $_POST['atdw_live_gallery_height'] ) ) {
+			$this->settings->update( 'atdw_live_gallery_height', absint( $_POST['atdw_live_gallery_height'] ) );
+		}
+
+		if ( isset( $_POST['atdw_live_thumbnail_width'] ) ) {
+			$this->settings->update( 'atdw_live_thumbnail_width', absint( $_POST['atdw_live_thumbnail_width'] ) );
+		}
+
+		if ( isset( $_POST['atdw_live_thumbnail_height'] ) ) {
+			$this->settings->update( 'atdw_live_thumbnail_height', absint( $_POST['atdw_live_thumbnail_height'] ) );
+		}
+
 		// Show success message
 		add_settings_error(
 			'atdw_live_settings',
