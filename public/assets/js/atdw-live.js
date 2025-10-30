@@ -854,8 +854,13 @@
 					// Strip query string (everything after ?)
 					imageUrl = imageUrl.split('?')[0];
 
+					// Append width and height parameters for listing images
+					var listingWidth = atdwLive.listingWidth || 400;
+					var listingHeight = atdwLive.listingHeight || 300;
+					var imageUrlWithParams = imageUrl + '?w=' + listingWidth + '&h=' + listingHeight;
+
 					html += '<div class="atdw-product-image">';
-					html += '<img src="' + this.escapeHtml(imageUrl) + '" alt="' + this.escapeHtml(product.productName || '') + '" loading="lazy" />';
+					html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" loading="lazy" />';
 
 					// Add price overlay if rate_from exists
 					if (product.rate_from || product.rateFrom) {
@@ -928,8 +933,17 @@
 
 			// Featured image
 			if (product.images && product.images.length > 0) {
+				var imageUrl = product.images[0];
+				// Strip query string (everything after ?)
+				imageUrl = imageUrl.split('?')[0];
+
+				// Use gallery dimensions for single product featured image (larger than listing)
+				var galleryWidth = atdwLive.galleryWidth || 600;
+				var galleryHeight = atdwLive.galleryHeight || 400;
+				var imageUrlWithParams = imageUrl + '?w=' + galleryWidth + '&h=' + galleryHeight;
+
 				html += '<div class="atdw-product-featured-image">';
-				html += '<img src="' + product.images[0] + '" alt="' + this.escapeHtml(product.productName || '') + '" />';
+				html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" />';
 				html += '</div>';
 			}
 

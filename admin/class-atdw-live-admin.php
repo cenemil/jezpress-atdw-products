@@ -225,6 +225,25 @@ class ATDW_Live_Admin {
 			$this->settings->update( 'atdw_live_gmaps_base_url', esc_url_raw( $_POST['atdw_live_gmaps_base_url'] ) );
 		}
 
+		// Image Settings - Listing Images
+		if ( isset( $_POST['atdw_live_listing_width'] ) ) {
+			$width = absint( $_POST['atdw_live_listing_width'] );
+			// Enforce minimum width of 400
+			if ( $width < 400 ) {
+				$width = 400;
+			}
+			$this->settings->update( 'atdw_live_listing_width', $width );
+		}
+
+		if ( isset( $_POST['atdw_live_listing_height'] ) ) {
+			$height = absint( $_POST['atdw_live_listing_height'] );
+			// Enforce minimum height of 300
+			if ( $height < 300 ) {
+				$height = 300;
+			}
+			$this->settings->update( 'atdw_live_listing_height', $height );
+		}
+
 		// Gallery Settings
 		if ( isset( $_POST['atdw_live_gallery_width'] ) ) {
 			$this->settings->update( 'atdw_live_gallery_width', absint( $_POST['atdw_live_gallery_width'] ) );

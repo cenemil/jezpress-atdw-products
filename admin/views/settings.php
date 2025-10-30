@@ -133,10 +133,28 @@ $output_formats = $settings->get_output_formats();
 			</table>
 		</div>
 
-		<!-- Gallery Settings -->
+		<!-- Image Settings -->
 		<div class="atdw-card">
-			<h2><?php esc_html_e( 'Gallery Settings', 'atdw-live-products' ); ?></h2>
+			<h2><?php esc_html_e( 'Image Settings', 'atdw-live-products' ); ?></h2>
 			<table class="form-table">
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_listing_width"><?php esc_html_e( 'Listing Image Width (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_listing_width" name="atdw_live_listing_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_listing_width' ) ); ?>" class="small-text" min="400" step="1" placeholder="400" required />
+						<p class="description"><?php esc_html_e( 'Width in pixels for listing images. Minimum: 400, Default: 400', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_listing_height"><?php esc_html_e( 'Listing Image Height (px)', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="number" id="atdw_live_listing_height" name="atdw_live_listing_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_listing_height' ) ); ?>" class="small-text" min="300" step="1" placeholder="300" required />
+						<p class="description"><?php esc_html_e( 'Height in pixels for listing images. Minimum: 300, Default: 300', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
 				<tr>
 					<th scope="row">
 						<label for="atdw_live_gallery_width"><?php esc_html_e( 'Gallery Image Width (px)', 'atdw-live-products' ); ?></label>

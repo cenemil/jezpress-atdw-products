@@ -55,6 +55,8 @@ class ATDW_Live_Settings {
 			'atdw_live_custom_css'       => get_option( 'atdw_live_custom_css', '' ),
 			'atdw_live_gmaps_api_key'    => get_option( 'atdw_live_gmaps_api_key', '' ),
 			'atdw_live_gmaps_base_url'   => get_option( 'atdw_live_gmaps_base_url', 'https://maps.googleapis.com/maps/api/js' ),
+			'atdw_live_listing_width'    => get_option( 'atdw_live_listing_width', 400 ),
+			'atdw_live_listing_height'   => get_option( 'atdw_live_listing_height', 300 ),
 			'atdw_live_gallery_width'    => get_option( 'atdw_live_gallery_width', 600 ),
 			'atdw_live_gallery_height'   => get_option( 'atdw_live_gallery_height', 400 ),
 			'atdw_live_thumbnail_width'  => get_option( 'atdw_live_thumbnail_width', 150 ),
@@ -135,6 +137,19 @@ class ATDW_Live_Settings {
 			'type'              => 'string',
 			'sanitize_callback' => 'esc_url_raw',
 			'default'           => 'https://maps.googleapis.com/maps/api/js',
+		) );
+
+		// Image Settings - Listing Images
+		register_setting( 'atdw_live_image_settings', 'atdw_live_listing_width', array(
+			'type'              => 'integer',
+			'sanitize_callback' => array( $this, 'sanitize_listing_width' ),
+			'default'           => 400,
+		) );
+
+		register_setting( 'atdw_live_image_settings', 'atdw_live_listing_height', array(
+			'type'              => 'integer',
+			'sanitize_callback' => array( $this, 'sanitize_listing_height' ),
+			'default'           => 300,
 		) );
 
 		// Gallery Settings
@@ -229,6 +244,36 @@ class ATDW_Live_Settings {
 	}
 
 	/**
+	 * Sanitize listing width value
+	 *
+	 * @param mixed $value Width value.
+	 * @return int Sanitized width with minimum of 400.
+	 */
+	public function sanitize_listing_width( $value ) {
+		$value = absint( $value );
+		// Enforce minimum width of 400
+		if ( $value < 400 ) {
+			$value = 400;
+		}
+		return $value;
+	}
+
+	/**
+	 * Sanitize listing height value
+	 *
+	 * @param mixed $value Height value.
+	 * @return int Sanitized height with minimum of 300.
+	 */
+	public function sanitize_listing_height( $value ) {
+		$value = absint( $value );
+		// Enforce minimum height of 300
+		if ( $value < 300 ) {
+			$value = 300;
+		}
+		return $value;
+	}
+
+	/**
 	 * Get available market variants
 	 *
 	 * @return array Market variants.
@@ -271,6 +316,8 @@ class ATDW_Live_Settings {
 			'atdw_live_custom_css'       => '',
 			'atdw_live_gmaps_api_key'    => '',
 			'atdw_live_gmaps_base_url'   => 'https://maps.googleapis.com/maps/api/js',
+			'atdw_live_listing_width'    => 400,
+			'atdw_live_listing_height'   => 300,
 			'atdw_live_gallery_width'    => 600,
 			'atdw_live_gallery_height'   => 400,
 			'atdw_live_thumbnail_width'  => 150,

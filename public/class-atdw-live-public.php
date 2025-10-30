@@ -113,6 +113,8 @@ class ATDW_Live_Public {
 				'outputFormat'    => $this->settings->get( 'atdw_live_output_format' ),
 				'gmapsApiKey'     => $this->settings->get( 'atdw_live_gmaps_api_key' ),
 				'gmapsBaseUrl'    => $this->settings->get( 'atdw_live_gmaps_base_url' ),
+				'listingWidth'    => $this->settings->get( 'atdw_live_listing_width', 400 ),
+				'listingHeight'   => $this->settings->get( 'atdw_live_listing_height', 300 ),
 				'galleryWidth'    => $this->settings->get( 'atdw_live_gallery_width', 600 ),
 				'galleryHeight'   => $this->settings->get( 'atdw_live_gallery_height', 400 ),
 				'thumbnailWidth'  => $this->settings->get( 'atdw_live_thumbnail_width', 150 ),
