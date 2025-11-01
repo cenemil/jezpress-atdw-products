@@ -113,12 +113,12 @@ class ATDW_Live_Public {
 				'outputFormat'    => $this->settings->get( 'atdw_live_output_format' ),
 				'gmapsApiKey'     => $this->settings->get( 'atdw_live_gmaps_api_key' ),
 				'gmapsBaseUrl'    => $this->settings->get( 'atdw_live_gmaps_base_url' ),
-				'listingWidth'    => $this->settings->get( 'atdw_live_listing_width', 400 ),
-				'listingHeight'   => $this->settings->get( 'atdw_live_listing_height', 300 ),
-				'galleryWidth'    => $this->settings->get( 'atdw_live_gallery_width', 600 ),
-				'galleryHeight'   => $this->settings->get( 'atdw_live_gallery_height', 400 ),
-				'thumbnailWidth'  => $this->settings->get( 'atdw_live_thumbnail_width', 150 ),
-				'thumbnailHeight' => $this->settings->get( 'atdw_live_thumbnail_height', 150 ),
+				'listingWidth'    => $this->settings->get( 'atdw_live_listing_width' ),
+				'listingHeight'   => $this->settings->get( 'atdw_live_listing_height' ),
+				'galleryWidth'    => $this->settings->get( 'atdw_live_gallery_width' ),
+				'galleryHeight'   => $this->settings->get( 'atdw_live_gallery_height' ),
+				'thumbnailWidth'  => $this->settings->get( 'atdw_live_thumbnail_width' ),
+				'thumbnailHeight' => $this->settings->get( 'atdw_live_thumbnail_height' ),
 				'strings'         => array(
 					'loading'    => __( 'Loading listings...', 'atdw-live-products' ),
 					'noProducts' => __( 'No listings found.', 'atdw-live-products' ),
@@ -152,6 +152,9 @@ class ATDW_Live_Public {
 				'columns'       => 3,
 				'show_image'    => 'yes',
 				'show_excerpt'  => 'yes',
+				'description_length' => 60,  // Number of words to show in description excerpt
+				'price_before'  => '',  // String to prepend to price (e.g., 'From ')
+				'price_after'   => '',  // String to append to price (e.g., ' per night')
 				'show_pagination' => 'yes',
 				'pagination_type' => 'number',  // Pagination type: 'number' (inline numbers) or 'prevnext' (prev/next buttons)
 				'view_label'    => 'View Details',  // Button label
@@ -181,6 +184,9 @@ class ATDW_Live_Public {
 			'data-columns'      => absint( $atts['columns'] ),
 			'data-show-image'   => esc_attr( $atts['show_image'] ),
 			'data-show-excerpt' => esc_attr( $atts['show_excerpt'] ),
+			'data-description-length' => absint( $atts['description_length'] ),
+			'data-price-before' => esc_attr( $atts['price_before'] ),
+			'data-price-after'  => esc_attr( $atts['price_after'] ),
 			'data-show-pagination' => esc_attr( $atts['show_pagination'] ),
 			'data-pagination-type' => esc_attr( $atts['pagination_type'] ),
 			'data-view-label'   => esc_attr( $atts['view_label'] ),
@@ -197,11 +203,11 @@ class ATDW_Live_Public {
 			<div class="atdw-live-products"></div>
 			<?php if ( 'yes' === $atts['show_pagination'] ) : ?>
 				<div class="atdw-pagination" style="display: none;">
-					<button class="atdw-prev-page" disabled><?php esc_html_e( '← Previous', 'atdw-live-products' ); ?></button>
+					<button class="atdw-prev-page" disabled><?php esc_html_e( 'Previous', 'atdw-live-products' ); ?></button>
 					<span class="atdw-page-info">
 						<?php esc_html_e( 'Page', 'atdw-live-products' ); ?> <span class="atdw-current-page">1</span> <span class="atdw-page-separator"><?php esc_html_e( 'of', 'atdw-live-products' ); ?></span> <span class="atdw-total-pages">1</span>
 					</span>
-					<button class="atdw-next-page"><?php esc_html_e( 'Next →', 'atdw-live-products' ); ?></button>
+					<button class="atdw-next-page"><?php esc_html_e( 'Next', 'atdw-live-products' ); ?></button>
 				</div>
 			<?php endif; ?>
 			<div class="atdw-live-error" style="display: none;">

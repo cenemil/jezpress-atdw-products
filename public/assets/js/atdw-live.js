@@ -724,6 +724,9 @@
 			var products = data.products || data.product || [];
 			var showImage = $container.data('show-image') !== 'no';
 			var showExcerpt = $container.data('show-excerpt') !== 'no';
+			var descriptionLength = parseInt($container.data('description-length')) || 60;
+			var priceBefore = $container.data('price-before') || '';
+			var priceAfter = $container.data('price-after') || '';
 			var viewLabel = $container.data('view-label') || 'View Details';
 			var viewSlug = $container.data('view-slug') || 'detail';
 
@@ -777,12 +780,12 @@
 
 			// Previous button - only show if there are previous pages
 			if (hasPrevious) {
-				resultsHtml += '<button class="atdw-results-prev" data-page="' + (currentPage - 1) + '">← Previous</button>';
+				resultsHtml += '<button class="atdw-results-prev" data-page="' + (currentPage - 1) + '">Previous</button>';
 			}
 
 			// Next button - only show if there are next pages
 			if (hasNext) {
-				resultsHtml += '<button class="atdw-results-next" data-page="' + (currentPage + 1) + '">Next →</button>';
+				resultsHtml += '<button class="atdw-results-next" data-page="' + (currentPage + 1) + '">Next</button>';
 			}
 
 			resultsHtml += '</span>';
@@ -803,7 +806,7 @@
 			var html = '';
 
 			$.each(products, function(index, product) {
-				html += ATDWLive.renderProductCard(product, showImage, showExcerpt, viewLabel, viewSlug);
+				html += ATDWLive.renderProductCard(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug);
 			});
 
 			$products.html(html);
@@ -827,7 +830,7 @@
 		/**
 		 * Render product card HTML
 		 */
-		renderProductCard: function(product, showImage, showExcerpt, viewLabel, viewSlug) {
+		renderProductCard: function(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug) {
 			// Get product ID
 			var productId = product.productId || product.id || '';
 
@@ -854,10 +857,13 @@
 					// Strip query string (everything after ?)
 					imageUrl = imageUrl.split('?')[0];
 
-					// Append width and height parameters for listing images
+					// Append width and height parameters for listing images (only if values are valid)
 					var listingWidth = atdwLive.listingWidth || 400;
 					var listingHeight = atdwLive.listingHeight || 300;
-					var imageUrlWithParams = imageUrl + '?w=' + listingWidth + '&h=' + listingHeight;
+					var imageParams = [];
+					if (listingWidth > 0) imageParams.push('w=' + listingWidth);
+					if (listingHeight > 0) imageParams.push('h=' + listingHeight);
+					var imageUrlWithParams = imageParams.length > 0 ? imageUrl + '?' + imageParams.join('&') : imageUrl;
 
 					html += '<div class="atdw-product-image">';
 					html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" loading="lazy" />';
@@ -865,7 +871,22 @@
 					// Add price overlay if rate_from exists
 					if (product.rate_from || product.rateFrom) {
 						var price = product.rate_from || product.rateFrom;
-						html += '<div class="atdw-product-price">$' + this.escapeHtml(price) + '</div>';
+						var priceDisplay = '';
+
+						// Add price_before text
+						if (priceBefore) {
+							priceDisplay += this.escapeHtml(priceBefore);
+						}
+
+						// Add dollar sign and price
+						priceDisplay += '$' + this.escapeHtml(price);
+
+						// Add price_after text
+						if (priceAfter) {
+							priceDisplay += this.escapeHtml(priceAfter);
+						}
+
+						html += '<div class="atdw-product-price">' + priceDisplay + '</div>';
 					}
 
 					html += '</div>';
@@ -885,10 +906,17 @@
 			}
 
 			if (showExcerpt && product.productDescription) {
-				var excerpt = product.productDescription.substring(0, 150);
-				if (product.productDescription.length > 150) {
-					excerpt += '...';
+				// Use word-based truncation with descriptionLength parameter
+				var words = product.productDescription.split(/\s+/);
+				var wordLimit = descriptionLength || 60; // Default to 60 words if not specified
+				var excerpt = '';
+
+				if (words.length > wordLimit) {
+					excerpt = words.slice(0, wordLimit).join(' ') + '...';
+				} else {
+					excerpt = product.productDescription;
 				}
+
 				html += '<div class="atdw-product-excerpt">' + this.escapeHtml(excerpt) + '</div>';
 			}
 
@@ -940,7 +968,10 @@
 				// Use gallery dimensions for single product featured image (larger than listing)
 				var galleryWidth = atdwLive.galleryWidth || 600;
 				var galleryHeight = atdwLive.galleryHeight || 400;
-				var imageUrlWithParams = imageUrl + '?w=' + galleryWidth + '&h=' + galleryHeight;
+				var imageParams = [];
+				if (galleryWidth > 0) imageParams.push('w=' + galleryWidth);
+				if (galleryHeight > 0) imageParams.push('h=' + galleryHeight);
+				var imageUrlWithParams = imageParams.length > 0 ? imageUrl + '?' + imageParams.join('&') : imageUrl;
 
 				html += '<div class="atdw-product-featured-image">';
 				html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" />';
@@ -1380,9 +1411,9 @@
 			var prevDisabled = currentPage <= 1 ? ' disabled' : '';
 			var nextDisabled = !hasMore ? ' disabled' : '';
 
-			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + '← Previous' + '</button>';
+			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + 'Previous' + '</button>';
 			html += '<span class="atdw-page-info">Page <span class="atdw-current-page">' + currentPage + '</span></span>';
-			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next →' + '</button>';
+			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next' + '</button>';
 
 			$pagination.html(html).show();
 
@@ -1550,9 +1581,9 @@
 			var prevDisabled = currentPage <= 1 ? ' disabled' : '';
 			var nextDisabled = !hasMore ? ' disabled' : '';
 
-			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + '← Previous' + '</button>';
+			var html = '<button class="atdw-prev-page"' + prevDisabled + '>' + 'Previous' + '</button>';
 			html += '<span class="atdw-page-info">Page <span class="atdw-current-page">' + currentPage + '</span></span>';
-			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next →' + '</button>';
+			html += '<button class="atdw-next-page"' + nextDisabled + '>' + 'Next' + '</button>';
 
 			$pagination.html(html).show();
 

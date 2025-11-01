@@ -113,6 +113,9 @@ When configured, the map shortcode will display an interactive embedded Google M
 - `columns` - Number of columns: 2, 3, or 4 (default: 3)
 - `show_image` - Show images: yes or no (default: yes)
 - `show_excerpt` - Show excerpt: yes or no (default: yes)
+- `description_length` - Number of words to display in description excerpt (default: 60)
+- `price_before` - Text to prepend to price display (e.g., 'From ', 'Starting at ') (default: empty)
+- `price_after` - Text to append to price display (e.g., ' per night', ' pp') (default: empty)
 - `show_pagination` - Show pagination controls: yes or no (default: yes)
 - `view_label` - Button label (default: "View Details")
 - `view_slug` - Single product page slug (default: "detail")
@@ -129,6 +132,11 @@ When configured, the map shortcode will display an interactive embedded Google M
 [atdw_live_products type="EVENTS" sort="rnd" size="6"]
 [atdw_live_products st="NSW" ct="Sydney,Newcastle,Wollongong" size="10"]
 [atdw_live_products ct="Melbourne,Geelong" type="ACCOMM" columns="4"]
+[atdw_live_products st="QLD" show_excerpt="yes" description_length="30" columns="3"]
+[atdw_live_products type="EVENTS" description_length="100" layout="list"]
+[atdw_live_products type="ACCOMM" price_before="From " price_after=" per night" columns="3"]
+[atdw_live_products st="NSW" price_before="Starting at " layout="grid"]
+[atdw_live_products type="TOUR" price_after=" pp" show_image="yes"]
 ```
 
 **ATDW API Parameters Used:**
