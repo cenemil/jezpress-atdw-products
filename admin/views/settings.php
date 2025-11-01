@@ -142,8 +142,9 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_listing_width"><?php esc_html_e( 'Listing Image Width (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_listing_width" name="atdw_live_listing_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_listing_width' ) ); ?>" class="small-text" min="400" step="1" placeholder="400" required />
-						<p class="description"><?php esc_html_e( 'Width in pixels for listing images. Minimum: 400, Default: 400', 'atdw-live-products' ); ?></p>
+						<?php $listing_width = $settings->get( 'atdw_live_listing_width' ); ?>
+						<input type="number" id="atdw_live_listing_width" name="atdw_live_listing_width" <?php echo ( $listing_width !== '' && $listing_width !== null ) ? 'value="' . esc_attr( $listing_width ) . '"' : ''; ?> class="small-text" step="1" placeholder="400" />
+						<p class="description"><?php esc_html_e( 'Width in pixels for listing images. Default: 400', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -151,8 +152,9 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_listing_height"><?php esc_html_e( 'Listing Image Height (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_listing_height" name="atdw_live_listing_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_listing_height' ) ); ?>" class="small-text" min="300" step="1" placeholder="300" required />
-						<p class="description"><?php esc_html_e( 'Height in pixels for listing images. Minimum: 300, Default: 300', 'atdw-live-products' ); ?></p>
+						<?php $listing_height = $settings->get( 'atdw_live_listing_height' ); ?>
+						<input type="number" id="atdw_live_listing_height" name="atdw_live_listing_height" <?php echo ( $listing_height !== '' && $listing_height !== null ) ? 'value="' . esc_attr( $listing_height ) . '"' : ''; ?> class="small-text" step="1" placeholder="300" />
+						<p class="description"><?php esc_html_e( 'Height in pixels for listing images. Default: 300', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -160,7 +162,8 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_gallery_width"><?php esc_html_e( 'Gallery Image Width (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_gallery_width" name="atdw_live_gallery_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_gallery_width' ) ); ?>" class="small-text" min="100" step="1" placeholder="600" />
+						<?php $gallery_width = $settings->get( 'atdw_live_gallery_width' ); ?>
+						<input type="number" id="atdw_live_gallery_width" name="atdw_live_gallery_width" <?php echo ( $gallery_width !== '' && $gallery_width !== null ) ? 'value="' . esc_attr( $gallery_width ) . '"' : ''; ?> class="small-text" step="1" placeholder="600" />
 						<p class="description"><?php esc_html_e( 'Width in pixels for lightbox gallery images. Default: 600', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
@@ -169,7 +172,8 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_gallery_height"><?php esc_html_e( 'Gallery Image Height (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_gallery_height" name="atdw_live_gallery_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_gallery_height' ) ); ?>" class="small-text" min="100" step="1" placeholder="400" />
+						<?php $gallery_height = $settings->get( 'atdw_live_gallery_height' ); ?>
+						<input type="number" id="atdw_live_gallery_height" name="atdw_live_gallery_height" <?php echo ( $gallery_height !== '' && $gallery_height !== null ) ? 'value="' . esc_attr( $gallery_height ) . '"' : ''; ?> class="small-text" step="1" placeholder="400" />
 						<p class="description"><?php esc_html_e( 'Height in pixels for lightbox gallery images. Default: 400', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
@@ -178,7 +182,8 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_thumbnail_width"><?php esc_html_e( 'Thumbnail Width (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_thumbnail_width" name="atdw_live_thumbnail_width" value="<?php echo esc_attr( $settings->get( 'atdw_live_thumbnail_width' ) ); ?>" class="small-text" min="50" step="1" placeholder="150" />
+						<?php $thumbnail_width = $settings->get( 'atdw_live_thumbnail_width' ); ?>
+						<input type="number" id="atdw_live_thumbnail_width" name="atdw_live_thumbnail_width" <?php echo ( $thumbnail_width !== '' && $thumbnail_width !== null ) ? 'value="' . esc_attr( $thumbnail_width ) . '"' : ''; ?> class="small-text" step="1" placeholder="150" />
 						<p class="description"><?php esc_html_e( 'Width in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
@@ -187,7 +192,8 @@ $output_formats = $settings->get_output_formats();
 						<label for="atdw_live_thumbnail_height"><?php esc_html_e( 'Thumbnail Height (px)', 'atdw-live-products' ); ?></label>
 					</th>
 					<td>
-						<input type="number" id="atdw_live_thumbnail_height" name="atdw_live_thumbnail_height" value="<?php echo esc_attr( $settings->get( 'atdw_live_thumbnail_height' ) ); ?>" class="small-text" min="50" step="1" placeholder="150" />
+						<?php $thumbnail_height = $settings->get( 'atdw_live_thumbnail_height' ); ?>
+						<input type="number" id="atdw_live_thumbnail_height" name="atdw_live_thumbnail_height" <?php echo ( $thumbnail_height !== '' && $thumbnail_height !== null ) ? 'value="' . esc_attr( $thumbnail_height ) . '"' : ''; ?> class="small-text" step="1" placeholder="150" />
 						<p class="description"><?php esc_html_e( 'Height in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>

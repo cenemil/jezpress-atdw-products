@@ -55,12 +55,12 @@ class ATDW_Live_Settings {
 			'atdw_live_custom_css'       => get_option( 'atdw_live_custom_css', '' ),
 			'atdw_live_gmaps_api_key'    => get_option( 'atdw_live_gmaps_api_key', '' ),
 			'atdw_live_gmaps_base_url'   => get_option( 'atdw_live_gmaps_base_url', 'https://maps.googleapis.com/maps/api/js' ),
-			'atdw_live_listing_width'    => get_option( 'atdw_live_listing_width', 400 ),
-			'atdw_live_listing_height'   => get_option( 'atdw_live_listing_height', 300 ),
-			'atdw_live_gallery_width'    => get_option( 'atdw_live_gallery_width', 600 ),
-			'atdw_live_gallery_height'   => get_option( 'atdw_live_gallery_height', 400 ),
-			'atdw_live_thumbnail_width'  => get_option( 'atdw_live_thumbnail_width', 150 ),
-			'atdw_live_thumbnail_height' => get_option( 'atdw_live_thumbnail_height', 150 ),
+			'atdw_live_listing_width'    => get_option( 'atdw_live_listing_width', '' ),
+			'atdw_live_listing_height'   => get_option( 'atdw_live_listing_height', '' ),
+			'atdw_live_gallery_width'    => get_option( 'atdw_live_gallery_width', '' ),
+			'atdw_live_gallery_height'   => get_option( 'atdw_live_gallery_height', '' ),
+			'atdw_live_thumbnail_width'  => get_option( 'atdw_live_thumbnail_width', '' ),
+			'atdw_live_thumbnail_height' => get_option( 'atdw_live_thumbnail_height', '' ),
 		);
 	}
 
@@ -155,25 +155,25 @@ class ATDW_Live_Settings {
 		// Gallery Settings
 		register_setting( 'atdw_live_gallery_settings', 'atdw_live_gallery_width', array(
 			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
+			'sanitize_callback' => array( $this, 'sanitize_dimension_value' ),
 			'default'           => 600,
 		) );
 
 		register_setting( 'atdw_live_gallery_settings', 'atdw_live_gallery_height', array(
 			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
+			'sanitize_callback' => array( $this, 'sanitize_dimension_value' ),
 			'default'           => 400,
 		) );
 
 		register_setting( 'atdw_live_gallery_settings', 'atdw_live_thumbnail_width', array(
 			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
+			'sanitize_callback' => array( $this, 'sanitize_dimension_value' ),
 			'default'           => 150,
 		) );
 
 		register_setting( 'atdw_live_gallery_settings', 'atdw_live_thumbnail_height', array(
 			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
+			'sanitize_callback' => array( $this, 'sanitize_dimension_value' ),
 			'default'           => 150,
 		) );
 	}
@@ -247,30 +247,42 @@ class ATDW_Live_Settings {
 	 * Sanitize listing width value
 	 *
 	 * @param mixed $value Width value.
-	 * @return int Sanitized width with minimum of 400.
+	 * @return int Sanitized width (can be 0 or empty).
 	 */
 	public function sanitize_listing_width( $value ) {
-		$value = absint( $value );
-		// Enforce minimum width of 400
-		if ( $value < 400 ) {
-			$value = 400;
+		// Preserve empty values, otherwise convert to integer
+		if ( $value === '' || $value === null ) {
+			return '';
 		}
-		return $value;
+		return absint( $value );
 	}
 
 	/**
 	 * Sanitize listing height value
 	 *
 	 * @param mixed $value Height value.
-	 * @return int Sanitized height with minimum of 300.
+	 * @return int Sanitized height (can be 0 or empty).
 	 */
 	public function sanitize_listing_height( $value ) {
-		$value = absint( $value );
-		// Enforce minimum height of 300
-		if ( $value < 300 ) {
-			$value = 300;
+		// Preserve empty values, otherwise convert to integer
+		if ( $value === '' || $value === null ) {
+			return '';
 		}
-		return $value;
+		return absint( $value );
+	}
+
+	/**
+	 * Sanitize dimension value (for all image dimensions)
+	 *
+	 * @param mixed $value Dimension value.
+	 * @return string|int Empty string for empty values, integer otherwise.
+	 */
+	public function sanitize_dimension_value( $value ) {
+		// Preserve empty values, otherwise convert to integer
+		if ( $value === '' || $value === null ) {
+			return '';
+		}
+		return absint( $value );
 	}
 
 	/**
@@ -316,12 +328,12 @@ class ATDW_Live_Settings {
 			'atdw_live_custom_css'       => '',
 			'atdw_live_gmaps_api_key'    => '',
 			'atdw_live_gmaps_base_url'   => 'https://maps.googleapis.com/maps/api/js',
-			'atdw_live_listing_width'    => 400,
-			'atdw_live_listing_height'   => 300,
-			'atdw_live_gallery_width'    => 600,
-			'atdw_live_gallery_height'   => 400,
-			'atdw_live_thumbnail_width'  => 150,
-			'atdw_live_thumbnail_height' => 150,
+			'atdw_live_listing_width'    => '',
+			'atdw_live_listing_height'   => '',
+			'atdw_live_gallery_width'    => '',
+			'atdw_live_gallery_height'   => '',
+			'atdw_live_thumbnail_width'  => '',
+			'atdw_live_thumbnail_height' => '',
 		);
 
 		foreach ( $defaults as $key => $value ) {

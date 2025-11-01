@@ -227,38 +227,64 @@ class ATDW_Live_Admin {
 
 		// Image Settings - Listing Images
 		if ( isset( $_POST['atdw_live_listing_width'] ) ) {
-			$width = absint( $_POST['atdw_live_listing_width'] );
-			// Enforce minimum width of 400
-			if ( $width < 400 ) {
-				$width = 400;
+			$value = $_POST['atdw_live_listing_width'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_listing_width', '' );
+			} else {
+				$this->settings->update( 'atdw_live_listing_width', absint( $value ) );
 			}
-			$this->settings->update( 'atdw_live_listing_width', $width );
 		}
 
 		if ( isset( $_POST['atdw_live_listing_height'] ) ) {
-			$height = absint( $_POST['atdw_live_listing_height'] );
-			// Enforce minimum height of 300
-			if ( $height < 300 ) {
-				$height = 300;
+			$value = $_POST['atdw_live_listing_height'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_listing_height', '' );
+			} else {
+				$this->settings->update( 'atdw_live_listing_height', absint( $value ) );
 			}
-			$this->settings->update( 'atdw_live_listing_height', $height );
 		}
 
 		// Gallery Settings
 		if ( isset( $_POST['atdw_live_gallery_width'] ) ) {
-			$this->settings->update( 'atdw_live_gallery_width', absint( $_POST['atdw_live_gallery_width'] ) );
+			$value = $_POST['atdw_live_gallery_width'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_gallery_width', '' );
+			} else {
+				$this->settings->update( 'atdw_live_gallery_width', absint( $value ) );
+			}
 		}
 
 		if ( isset( $_POST['atdw_live_gallery_height'] ) ) {
-			$this->settings->update( 'atdw_live_gallery_height', absint( $_POST['atdw_live_gallery_height'] ) );
+			$value = $_POST['atdw_live_gallery_height'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_gallery_height', '' );
+			} else {
+				$this->settings->update( 'atdw_live_gallery_height', absint( $value ) );
+			}
 		}
 
 		if ( isset( $_POST['atdw_live_thumbnail_width'] ) ) {
-			$this->settings->update( 'atdw_live_thumbnail_width', absint( $_POST['atdw_live_thumbnail_width'] ) );
+			$value = $_POST['atdw_live_thumbnail_width'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_thumbnail_width', '' );
+			} else {
+				$this->settings->update( 'atdw_live_thumbnail_width', absint( $value ) );
+			}
 		}
 
 		if ( isset( $_POST['atdw_live_thumbnail_height'] ) ) {
-			$this->settings->update( 'atdw_live_thumbnail_height', absint( $_POST['atdw_live_thumbnail_height'] ) );
+			$value = $_POST['atdw_live_thumbnail_height'];
+			// Preserve empty values, otherwise convert to integer
+			if ( $value === '' || $value === null ) {
+				$this->settings->update( 'atdw_live_thumbnail_height', '' );
+			} else {
+				$this->settings->update( 'atdw_live_thumbnail_height', absint( $value ) );
+			}
 		}
 
 		// Show success message
