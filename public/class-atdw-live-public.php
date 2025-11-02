@@ -119,6 +119,8 @@ class ATDW_Live_Public {
 				'galleryHeight'   => $this->settings->get( 'atdw_live_gallery_height' ),
 				'thumbnailWidth'  => $this->settings->get( 'atdw_live_thumbnail_width' ),
 				'thumbnailHeight' => $this->settings->get( 'atdw_live_thumbnail_height' ),
+				'badgeImageUrl'   => $this->settings->get( 'atdw_live_badge_image_url' ),
+				'badgeAttributeType' => $this->settings->get( 'atdw_live_badge_attribute_type' ),
 				'strings'         => array(
 					'loading'    => __( 'Loading listings...', 'atdw-live-products' ),
 					'noProducts' => __( 'No listings found.', 'atdw-live-products' ),
@@ -159,6 +161,7 @@ class ATDW_Live_Public {
 				'pagination_type' => 'number',  // Pagination type: 'number' (inline numbers) or 'prevnext' (prev/next buttons)
 				'view_label'    => 'View Details',  // Button label
 				'view_slug'     => 'detail',  // Single product page slug
+				'badge'         => '',  // Attribute Type ID to show badge (e.g., 'TOURISMORG')
 			),
 			$atts,
 			'atdw_live_products'
@@ -191,6 +194,7 @@ class ATDW_Live_Public {
 			'data-pagination-type' => esc_attr( $atts['pagination_type'] ),
 			'data-view-label'   => esc_attr( $atts['view_label'] ),
 			'data-view-slug'    => esc_attr( $atts['view_slug'] ),
+			'data-badge'        => esc_attr( $atts['badge'] ),
 		);
 
 		ob_start();
@@ -415,6 +419,7 @@ class ATDW_Live_Public {
 				'map_height' => '400px', // Map height (for map key)
 				'map_zoom'   => '15',    // Map zoom level (for map key)
 				'attribute_type' => '',  // Attribute Type ID to filter attributes (for key='attributes')
+				'date_format'    => '',  // Date format for date fields (e.g., 'F j, Y' for 'November 7, 2025')
 			),
 			$atts,
 			'atdw_live_meta'
@@ -458,6 +463,7 @@ class ATDW_Live_Public {
 			'data-map-height'  => esc_attr( $atts['map_height'] ),
 			'data-map-zoom'    => absint( $atts['map_zoom'] ),
 			'data-attribute-type' => esc_attr( $atts['attribute_type'] ),
+			'data-date-format' => esc_attr( $atts['date_format'] ),
 		);
 
 		ob_start();
