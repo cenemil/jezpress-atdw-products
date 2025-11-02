@@ -268,85 +268,136 @@
 			var columns = parseInt($container.data('columns')) || 3;
 			var link = $container.data('link') !== 'no';
 			var label = $container.data('label') || '';
-		var galleryLayout = $container.data('gallery-layout') || 'inline';
-		var attributeType = $container.data('attribute-type') || '';
+			var galleryLayout = $container.data('gallery-layout') || 'inline';
+			var attributeType = $container.data('attribute-type') || '';
+			var dateFormat = $container.data('date-format') || '';
 
-		// Handle special 'address' key - extract from addresses array
-		if (metaKey.toLowerCase() === 'address') {
-			var value = ATDWLive.extractFormattedAddress(product);
-			var fieldName = 'address';
-		}
-		// Handle special 'map' key - extract coordinates from addresses array
-		else if (metaKey.toLowerCase() === 'map') {
-			var value = ATDWLive.extractMapCoordinates(product);
-			var fieldName = 'map';
-		}
-		// Handle special 'gallery'/'images' key - extract from multimedia array
-		else if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
-			var value = ATDWLive.extractGalleryFromMultimedia(product);
-			var fieldName = 'gallery';
-		}
-		// Handle special 'attributes' key - extract from attributes array by type
-		else if (metaKey.toLowerCase() === 'attributes') {
-			var value = ATDWLive.extractAttributesByType(product, attributeType);
-			var fieldName = 'attributes';
-		}
-		// Try to use the exact API field name first (case-sensitive)
-		else {
+			// Handle special 'badge' key - display badge if product has the specified attribute
+			if (metaKey.toLowerCase() === 'badge') {
+				// Get badge settings from plugin configuration
+				var badgeImageUrl = atdwLive.badgeImageUrl || '';
+				var badgeAttributeTypeId = attributeType || atdwLive.badgeAttributeType || '';
 
-			var value = product[metaKey];
-			var fieldName = metaKey;
+				var value = null;
+				var fieldName = 'badge';
 
-			// If not found, try friendly aliases (for backward compatibility)
-			if (!value) {
-				var fieldMapping = {
-					'name': 'productName',
-					'title': 'productName',
-					'description': 'productDescription',
-					'phone': 'phone',
-					'email': 'email',
-					'website': 'websiteUrl',
-					'address': 'address',
-					'locality': 'locality',
-					'area': 'area',
-					'state': 'state',
-					'postcode': 'postcode',
-					'country': 'country',
-					'gallery': 'images',
-					'images': 'images',
-					'image': 'productImage',
-					'featured_image': 'productImage',
-					'price': 'rate_from',
-					'rate': 'rate_from'
-				};
+				// Check if badge should be displayed
+				if (badgeImageUrl && badgeAttributeTypeId && product.attributes && Array.isArray(product.attributes)) {
+					// Check if any attribute has the specified attributeTypeId
+					var hasAttribute = product.attributes.some(function(attr) {
+						return attr.attributeTypeId === badgeAttributeTypeId;
+					});
 
-				var mappedField = fieldMapping[metaKey.toLowerCase()];
-				if (mappedField) {
-					value = product[mappedField];
-					fieldName = mappedField;
-				}
-		}
-
-			// Priority override: check communication array for phone, email, website
-			if (metaKey.toLowerCase() === 'phone') {
-				var commPhone = ATDWLive.extractPhoneFromCommunication(product);
-				if (commPhone) {
-					value = commPhone;
-					fieldName = 'phone';
-				}
-			} else if (metaKey.toLowerCase() === 'email') {
-				var commEmail = ATDWLive.extractEmailFromCommunication(product);
-				if (commEmail) {
-					value = commEmail;
-					fieldName = 'email';
-				}
-			} else if (metaKey.toLowerCase() === 'website') {
-				var commWebsite = ATDWLive.extractWebsiteFromCommunication(product);
-				if (commWebsite) {
-					value = commWebsite;
-					fieldName = 'websiteUrl';
+					if (hasAttribute) {
+						value = badgeImageUrl;
+					}
 				}
 			}
+			// Handle special 'address' key - extract from addresses array
+			else if (metaKey.toLowerCase() === 'address') {
+				var value = ATDWLive.extractFormattedAddress(product);
+				var fieldName = 'address';
+			}
+			// Handle special 'map' key - extract coordinates from addresses array
+			else if (metaKey.toLowerCase() === 'map') {
+				var value = ATDWLive.extractMapCoordinates(product);
+				var fieldName = 'map';
+			}
+			// Handle special 'gallery'/'images' key - extract from multimedia array
+			else if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+				var value = ATDWLive.extractGalleryFromMultimedia(product);
+				var fieldName = 'gallery';
+			}
+			// Handle special 'attributes' key - extract from attributes array by type
+			else if (metaKey.toLowerCase() === 'attributes') {
+				var value = ATDWLive.extractAttributesByType(product, attributeType);
+				var fieldName = 'attributes';
+			}
+			// Try to use the exact API field name first (case-sensitive)
+			else {
+
+				var value = product[metaKey];
+				var fieldName = metaKey;
+
+				// If not found, try friendly aliases (for backward compatibility)
+				if (!value) {
+					var fieldMapping = {
+						'name': 'productName',
+						'title': 'productName',
+						'description': 'productDescription',
+						'phone': 'phone',
+						'email': 'email',
+						'website': 'websiteUrl',
+						'address': 'address',
+						'locality': 'locality',
+						'area': 'area',
+						'state': 'state',
+						'postcode': 'postcode',
+						'country': 'country',
+						'gallery': 'images',
+						'images': 'images',
+						'image': 'productImage',
+						'featured_image': 'productImage',
+						'price': 'rate_from',
+						'rate': 'rate_from'
+					};
+
+					var mappedField = fieldMapping[metaKey.toLowerCase()];
+					if (mappedField) {
+						value = product[mappedField];
+						fieldName = mappedField;
+					}
+				}
+
+				// Priority override: check communication array for phone, email, website
+				if (metaKey.toLowerCase() === 'phone') {
+					var commPhone = ATDWLive.extractPhoneFromCommunication(product);
+					if (commPhone) {
+						value = commPhone;
+						fieldName = 'phone';
+					}
+				} else if (metaKey.toLowerCase() === 'email') {
+					var commEmail = ATDWLive.extractEmailFromCommunication(product);
+					if (commEmail) {
+						value = commEmail;
+						fieldName = 'email';
+					}
+				} else if (metaKey.toLowerCase() === 'website') {
+					var commWebsite = ATDWLive.extractWebsiteFromCommunication(product);
+					if (commWebsite) {
+						value = commWebsite;
+						fieldName = 'websiteUrl';
+					}
+				}
+			}
+
+			// Special handling for nextOccurrence - store event times for later appending
+			var eventTimeStr = '';
+			if (metaKey === 'nextOccurrence' && value && product.eventFrequency && Array.isArray(product.eventFrequency)) {
+				// Look for matching eventFrequency entry
+				var matchingFrequency = null;
+				for (var i = 0; i < product.eventFrequency.length; i++) {
+					var freq = product.eventFrequency[i];
+					if (freq.frequencyStartDate === value) {
+						matchingFrequency = freq;
+						break;
+					}
+				}
+
+				// If we found a matching frequency with time information, store it and convert to 12-hour format
+				if (matchingFrequency) {
+					if (matchingFrequency.frequencyStartTime) {
+						// Convert start time to 12-hour format with AM/PM
+						var startTime12Hour = ATDWLive.convertTo12HourFormat(matchingFrequency.frequencyStartTime);
+						eventTimeStr = startTime12Hour;
+
+						if (matchingFrequency.frequencyEndTime) {
+							// Convert end time to 12-hour format with AM/PM
+							var endTime12Hour = ATDWLive.convertTo12HourFormat(matchingFrequency.frequencyEndTime);
+							eventTimeStr += ' to ' + endTime12Hour;
+						}
+					}
+				}
 			}
 
 			if (!value) {
@@ -358,7 +409,21 @@
 			var html = before;
 
 			// Handle different field types
-			if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+			if (metaKey.toLowerCase() === 'badge') {
+				// Badge display - show badge image if value exists
+				if (value) {
+					// If the URL is relative and doesn't start with http, prepend the site URL
+					var badgeUrl = value;
+					if (badgeUrl && !badgeUrl.match(/^https?:\/\//)) {
+						badgeUrl = window.location.origin + badgeUrl;
+					}
+					if (format === 'html') {
+						html += '<img src="' + ATDWLive.escapeHtml(badgeUrl) + '" alt="Badge" class="atdw-meta-badge" />';
+					} else {
+						html += badgeUrl;
+					}
+				}
+			} else if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
 				// Gallery display
 				html += ATDWLive.renderGallery(value, size, columns, link, product.productName || '', galleryLayout);
 			} else if (metaKey.toLowerCase() === 'image' || metaKey.toLowerCase() === 'featured_image') {
@@ -458,6 +523,37 @@
 					}).join('<br>') + '</div>';
 				}
 			} else {
+				// Check if value should be formatted as date
+				if (dateFormat && value) {
+					// Check if the value looks like a date (matches common date patterns)
+					var datePatterns = [
+						/^\d{4}-\d{2}-\d{2}$/,           // YYYY-MM-DD
+						/^\d{4}-\d{2}-\d{2}T/,           // ISO 8601 format
+						/^\d{2}\/\d{2}\/\d{4}$/,         // MM/DD/YYYY or DD/MM/YYYY
+						/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/ // Various date formats
+					];
+
+					var isDate = datePatterns.some(function(pattern) {
+						return pattern.test(value);
+					});
+
+					// Also check if field name suggests it's a date
+					var dateFields = ['date', 'start_date', 'end_date', 'next_occurrence', 'startDate', 'endDate', 'nextOccurrence',
+					                  'created', 'updated', 'modified', 'published'];
+					var isDateField = dateFields.some(function(field) {
+						return metaKey.toLowerCase().indexOf(field.toLowerCase()) !== -1;
+					});
+
+					if (isDate || isDateField) {
+						value = ATDWLive.formatDate(value, dateFormat);
+					}
+				}
+
+				// Append event time string if available (for nextOccurrence)
+				if (eventTimeStr) {
+					value = value + ' ' + eventTimeStr;
+				}
+
 				// Default text display
 				if (format === 'raw') {
 					html += value;
@@ -470,123 +566,124 @@
 
 			$content.html(html);
 
-		// Initialize GLightbox for dynamically loaded galleries
-		if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
-			ATDWLive.initGLightbox();
-		}
+			// Initialize GLightbox for dynamically loaded galleries
+			if (metaKey.toLowerCase() === 'gallery' || metaKey.toLowerCase() === 'images') {
+				ATDWLive.initGLightbox();
+			}
 		},
-	/**
-	 * Render gallery of images
-	 */
-	renderGallery: function(images, size, columns, link, altText, layout) {
-		if (!Array.isArray(images)) {
-			images = [images];
-		}
 
-		if (images.length === 0) {
-			return '<p class="atdw-no-value">No images available</p>';
-		}
-
-		// Get gallery settings from atdwLive config (as integers)
-		var galleryWidth = atdwLive.galleryWidth || 600;
-		var galleryHeight = atdwLive.galleryHeight || 400;
-		var thumbnailWidth = atdwLive.thumbnailWidth || 150;
-		var thumbnailHeight = atdwLive.thumbnailHeight || 150;
-
-		// Default layout to 'inline' if not provided
-		layout = layout || 'inline';
-
-		// Generate unique gallery ID for GLightbox grouping
-		var galleryId = 'gallery-' + Math.random().toString(36).substr(2, 9);
-
-		var html = '';
-
-		if (layout === 'grid') {
-			// Grid layout with CSS Grid
-			var gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(' + thumbnailWidth + 'px, 1fr)); gap: 10px;';
-			html += '<div class="atdw-meta-gallery atdw-gallery-grid atdw-gallery-columns-' + columns + '" style="' + gridStyle + '">';
-
-			// Grid: use width and height from settings
-			var thumbnailStyles = 'width: 100%; height: ' + thumbnailHeight + 'px; object-fit: cover; display: block;';
-
-			for (var i = 0; i < images.length; i++) {
-				var imageItem = images[i];
-				// Support both object format {url, altText} and legacy string format
-				var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
-				var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
-
-				if (imageUrl) {
-					// Strip query string
-					imageUrl = imageUrl.split('?')[0];
-
-					// Create full-size URL with width and height parameters for lightbox (only if values are valid)
-					var fullImageParams = [];
-					if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
-					if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
-					var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
-
-					// Create thumbnail URL with width and height parameters (only if values are valid)
-					var thumbnailParams = [];
-					if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
-					if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
-					var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
-
-					html += '<div class="atdw-gallery-item">';
-					html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
-					html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + thumbnailStyles + '" loading="lazy" />';
-					html += '</a>';
-					html += '</div>';
-				}
+		/**
+		 * Render gallery of images
+		 */
+		renderGallery: function(images, size, columns, link, altText, layout) {
+			if (!Array.isArray(images)) {
+				images = [images];
 			}
 
-			html += '</div>';
-		} else {
-			// Inline layout (default) - simple display with inline-block
-			html += '<div class="atdw-meta-gallery atdw-gallery-inline" style="display: flex; flex-wrap: wrap; gap: 10px;">';
-
-			// Inline: use max-width and max-height from settings, maintain aspect ratio (only if values are valid)
-			var inlineStyleParts = [];
-			if (thumbnailWidth > 0) inlineStyleParts.push('max-width: ' + thumbnailWidth + 'px');
-			if (thumbnailHeight > 0) inlineStyleParts.push('max-height: ' + thumbnailHeight + 'px');
-			inlineStyleParts.push('height: auto');
-			inlineStyleParts.push('display: block');
-			var inlineStyles = inlineStyleParts.join('; ') + ';';
-
-			for (var i = 0; i < images.length; i++) {
-				var imageItem = images[i];
-				// Support both object format {url, altText} and legacy string format
-				var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
-				var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
-
-				if (imageUrl) {
-					// Strip query string
-					imageUrl = imageUrl.split('?')[0];
-
-					// Create full-size URL with width and height parameters for lightbox (only if values are valid)
-					var fullImageParams = [];
-					if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
-					if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
-					var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
-
-					// Create thumbnail URL with width and height parameters (only if values are valid)
-					var thumbnailParams = [];
-					if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
-					if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
-					var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
-
-					html += '<div class="atdw-gallery-item" style="flex: 0 0 auto;">';
-					html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
-					html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + inlineStyles + '" loading="lazy" />';
-					html += '</a>';
-					html += '</div>';
-				}
+			if (images.length === 0) {
+				return '<p class="atdw-no-value">No images available</p>';
 			}
 
-			html += '</div>';
-		}
+			// Get gallery settings from atdwLive config (as integers)
+			var galleryWidth = atdwLive.galleryWidth || 600;
+			var galleryHeight = atdwLive.galleryHeight || 400;
+			var thumbnailWidth = atdwLive.thumbnailWidth;
+			var thumbnailHeight = atdwLive.thumbnailHeight;
 
-		return html;
-	},
+			// Default layout to 'inline' if not provided
+			layout = layout || 'inline';
+
+			// Generate unique gallery ID for GLightbox grouping
+			var galleryId = 'gallery-' + Math.random().toString(36).substr(2, 9);
+
+			var html = '';
+
+			if (layout === 'grid') {
+				// Grid layout with CSS Grid
+				var gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(' + thumbnailWidth + 'px, 1fr)); gap: 10px;';
+				html += '<div class="atdw-meta-gallery atdw-gallery-grid atdw-gallery-columns-' + columns + '" style="' + gridStyle + '">';
+
+				// Grid: use width and height from settings
+				var thumbnailStyles = 'width: 100%; height: ' + thumbnailHeight + 'px; object-fit: cover; display: block;';
+
+				for (var i = 0; i < images.length; i++) {
+					var imageItem = images[i];
+					// Support both object format {url, altText} and legacy string format
+					var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
+					var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
+
+					if (imageUrl) {
+						// Strip query string
+						imageUrl = imageUrl.split('?')[0];
+
+						// Create full-size URL with width and height parameters for lightbox (only if values are valid)
+						var fullImageParams = [];
+						if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
+						if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
+						var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
+
+						// Create thumbnail URL with width and height parameters (only if values are valid)
+						var thumbnailParams = [];
+						if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
+						if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
+						var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
+
+						html += '<div class="atdw-gallery-item">';
+						html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
+						html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + thumbnailStyles + '" loading="lazy" />';
+						html += '</a>';
+						html += '</div>';
+					}
+				}
+
+				html += '</div>';
+			} else {
+				// Inline layout (default) - simple display with inline-block
+				html += '<div class="atdw-meta-gallery atdw-gallery-inline">';
+
+				// Inline: use max-width and max-height from settings, maintain aspect ratio (only if values are valid)
+				var inlineStyleParts = [];
+				if (thumbnailWidth > 0) inlineStyleParts.push('max-width: ' + thumbnailWidth + 'px');
+				if (thumbnailHeight > 0) inlineStyleParts.push('max-height: ' + thumbnailHeight + 'px');
+				inlineStyleParts.push('height: auto');
+				inlineStyleParts.push('display: block');
+				var inlineStyles = inlineStyleParts.join('; ') + ';';
+
+				for (var i = 0; i < images.length; i++) {
+					var imageItem = images[i];
+					// Support both object format {url, altText} and legacy string format
+					var imageUrl = typeof imageItem === 'object' ? imageItem.url : imageItem;
+					var imageAltText = typeof imageItem === 'object' && imageItem.altText ? imageItem.altText : altText;
+
+					if (imageUrl) {
+						// Strip query string
+						imageUrl = imageUrl.split('?')[0];
+
+						// Create full-size URL with width and height parameters for lightbox (only if values are valid)
+						var fullImageParams = [];
+						if (galleryWidth > 0) fullImageParams.push('w=' + galleryWidth);
+						if (galleryHeight > 0) fullImageParams.push('h=' + galleryHeight);
+						var fullImageUrl = fullImageParams.length > 0 ? imageUrl + '?' + fullImageParams.join('&') : imageUrl;
+
+						// Create thumbnail URL with width and height parameters (only if values are valid)
+						var thumbnailParams = [];
+						if (thumbnailWidth > 0) thumbnailParams.push('w=' + thumbnailWidth);
+						if (thumbnailHeight > 0) thumbnailParams.push('h=' + thumbnailHeight);
+						var thumbnailUrl = thumbnailParams.length > 0 ? imageUrl + '?' + thumbnailParams.join('&') : imageUrl;
+
+						html += '<div class="atdw-gallery-item">';
+						html += '<a href="' + ATDWLive.escapeHtml(fullImageUrl) + '" class="glightbox atdw-gallery-link" data-gallery="' + galleryId + '" data-glightbox="description:' + ATDWLive.escapeHtml(imageAltText) + ';">';
+						html += '<img src="' + ATDWLive.escapeHtml(thumbnailUrl) + '" alt="' + ATDWLive.escapeHtml(imageAltText) + '" style="' + inlineStyles + '" loading="lazy" />';
+						html += '</a>';
+						html += '</div>';
+					}
+				}
+
+				html += '</div>';
+			}
+
+				return html;
+		},
 
 
 		/**
@@ -603,8 +700,8 @@
 			// Get gallery settings from atdwLive config
 			var galleryWidth = (atdwLive.galleryWidth || 600) + 'px';
 			var galleryHeight = (atdwLive.galleryHeight || 400) + 'px';
-			var thumbnailWidth = (atdwLive.thumbnailWidth || 150) + 'px';
-			var thumbnailHeight = (atdwLive.thumbnailHeight || 150) + 'px';
+			var thumbnailWidth = atdwLive.thumbnailWidth ? atdwLive.thumbnailWidth + 'px' : 'auto';
+			var thumbnailHeight = atdwLive.thumbnailHeight ? atdwLive.thumbnailHeight + 'px' : 'auto';
 
 			// Determine image styles based on size parameter
 			var imageStyles = '';
@@ -729,6 +826,8 @@
 			var priceAfter = $container.data('price-after') || '';
 			var viewLabel = $container.data('view-label') || 'View Details';
 			var viewSlug = $container.data('view-slug') || 'detail';
+			// Use badge from shortcode, fallback to settings if not specified
+			var badgeAttributeTypeId = $container.data('badge') || atdwLive.badgeAttributeType || '';
 
 			// Handle single product in array
 			if (!Array.isArray(products) && typeof products === 'object') {
@@ -806,7 +905,7 @@
 			var html = '';
 
 			$.each(products, function(index, product) {
-				html += ATDWLive.renderProductCard(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug);
+				html += ATDWLive.renderProductCard(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug, badgeAttributeTypeId);
 			});
 
 			$products.html(html);
@@ -830,7 +929,7 @@
 		/**
 		 * Render product card HTML
 		 */
-		renderProductCard: function(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug) {
+		renderProductCard: function(product, showImage, showExcerpt, descriptionLength, priceBefore, priceAfter, viewLabel, viewSlug, badgeAttributeTypeId) {
 			// Get product ID
 			var productId = product.productId || product.id || '';
 
@@ -866,7 +965,25 @@
 					var imageUrlWithParams = imageParams.length > 0 ? imageUrl + '?' + imageParams.join('&') : imageUrl;
 
 					html += '<div class="atdw-product-image">';
-					html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" loading="lazy" />';
+					html += '<img src="' + this.escapeHtml(imageUrlWithParams) + '" alt="' + this.escapeHtml(product.productName || '') + '" class="atdw-listing-image" loading="lazy" />';
+
+					// Check if we should add a badge based on attributes
+					if (badgeAttributeTypeId && product.attributes && Array.isArray(product.attributes) && atdwLive.badgeImageUrl) {
+						// Check if any attribute has the specified attributeTypeId
+						var hasAttribute = product.attributes.some(function(attr) {
+							return attr.attributeTypeId === badgeAttributeTypeId;
+						});
+
+						if (hasAttribute) {
+							// Add the badge image from settings
+							var badgeUrl = atdwLive.badgeImageUrl;
+							// If the URL is relative and doesn't start with http, prepend the site URL
+							if (badgeUrl && !badgeUrl.match(/^https?:\/\//)) {
+								badgeUrl = window.location.origin + badgeUrl;
+							}
+							html += '<img src="' + badgeUrl + '" alt="Badge" class="atdw-product-badge" />';
+						}
+					}
 
 					// Add price overlay if rate_from exists
 					if (product.rate_from || product.rateFrom) {
@@ -1693,6 +1810,116 @@
 		nl2br: function(text) {
 			if (!text) return '';
 			return String(text).replace(/\n/g, '<br>');
+		},
+
+		/**
+		 * Convert 24-hour time format to 12-hour format with AM/PM
+		 * @param {string} time24 - Time in 24-hour format (e.g., '13:00', '09:30')
+		 * @return {string} Time in 12-hour format with AM/PM (e.g., '1:00 PM', '9:30 AM')
+		 */
+		convertTo12HourFormat: function(time24) {
+			if (!time24 || typeof time24 !== 'string') return time24;
+
+			// Parse the time string (expected format: HH:MM or HH:MM:SS)
+			var timeParts = time24.split(':');
+			if (timeParts.length < 2) return time24;
+
+			var hours = parseInt(timeParts[0], 10);
+			var minutes = timeParts[1];
+
+			// Validate hours
+			if (isNaN(hours) || hours < 0 || hours > 23) return time24;
+
+			// Determine AM/PM
+			var period = hours >= 12 ? 'PM' : 'AM';
+
+			// Convert to 12-hour format
+			if (hours === 0) {
+				hours = 12; // Midnight
+			} else if (hours > 12) {
+				hours = hours - 12;
+			}
+
+			// Return formatted time
+			return hours + ':' + minutes + ' ' + period;
+		},
+
+		/**
+		 * Format date string according to PHP-like format patterns
+		 * @param {string} dateStr - Date string (e.g., '2025-11-07')
+		 * @param {string} format - Format pattern (e.g., 'F j, Y' for 'November 7, 2025')
+		 * @return {string} Formatted date string
+		 */
+		formatDate: function(dateStr, format) {
+			if (!dateStr || !format) return dateStr;
+
+			// Parse the date string
+			var date = new Date(dateStr);
+			if (isNaN(date.getTime())) return dateStr; // Return original if invalid date
+
+			// Define month and day names
+			var months = ['January', 'February', 'March', 'April', 'May', 'June',
+			              'July', 'August', 'September', 'October', 'November', 'December'];
+			var monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+			                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+			var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+			var daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+			// Get date parts
+			var year = date.getFullYear();
+			var month = date.getMonth();
+			var day = date.getDate();
+			var dayOfWeek = date.getDay();
+
+			// Helper function to get ordinal suffix
+			var getOrdinal = function(n) {
+				var s = ['th', 'st', 'nd', 'rd'];
+				var v = n % 100;
+				return n + (s[(v - 20) % 10] || s[v] || s[0]);
+			};
+
+			// Create a map of replacements to avoid conflicts
+			var replacements = {
+				// Year formats
+				'Y': year, // 4-digit year
+				'y': String(year).substr(2), // 2-digit year
+
+				// Month formats
+				'F': months[month], // Full month name
+				'M': monthsShort[month], // Short month name
+				'm': ('0' + (month + 1)).slice(-2), // Month with leading zeros
+				'n': month + 1, // Month without leading zeros
+
+				// Day formats
+				'd': ('0' + day).slice(-2), // Day with leading zeros
+				'j': day, // Day without leading zeros
+				'jS': getOrdinal(day), // Day with ordinal
+				'S': getOrdinal(day).replace(day, ''), // Ordinal suffix only
+
+				// Weekday formats
+				'l': days[dayOfWeek], // Full day name
+				'D': daysShort[dayOfWeek], // Short day name
+				'w': dayOfWeek // Day of week (0-6)
+			};
+
+			// Process format string character by character to avoid conflicts
+			var formatted = '';
+			var i = 0;
+			while (i < format.length) {
+				// Check for multi-character tokens first
+				if (i < format.length - 1 && format.substr(i, 2) === 'jS') {
+					formatted += replacements['jS'];
+					i += 2;
+				} else if (replacements.hasOwnProperty(format[i])) {
+					formatted += replacements[format[i]];
+					i++;
+				} else {
+					formatted += format[i];
+					i++;
+				}
+			}
+
+			return formatted;
 		},
 
 	/**

@@ -61,6 +61,8 @@ class ATDW_Live_Settings {
 			'atdw_live_gallery_height'   => get_option( 'atdw_live_gallery_height', '' ),
 			'atdw_live_thumbnail_width'  => get_option( 'atdw_live_thumbnail_width', '' ),
 			'atdw_live_thumbnail_height' => get_option( 'atdw_live_thumbnail_height', '' ),
+			'atdw_live_badge_image_url'  => get_option( 'atdw_live_badge_image_url', '' ),
+			'atdw_live_badge_attribute_type' => get_option( 'atdw_live_badge_attribute_type', '' ),
 		);
 	}
 
@@ -175,6 +177,19 @@ class ATDW_Live_Settings {
 			'type'              => 'integer',
 			'sanitize_callback' => array( $this, 'sanitize_dimension_value' ),
 			'default'           => 150,
+		) );
+
+		// Badge Settings
+		register_setting( 'atdw_live_badge_settings', 'atdw_live_badge_image_url', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+
+		register_setting( 'atdw_live_badge_settings', 'atdw_live_badge_attribute_type', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
 		) );
 	}
 
@@ -334,6 +349,8 @@ class ATDW_Live_Settings {
 			'atdw_live_gallery_height'   => '',
 			'atdw_live_thumbnail_width'  => '',
 			'atdw_live_thumbnail_height' => '',
+			'atdw_live_badge_image_url'  => '',
+			'atdw_live_badge_attribute_type' => '',
 		);
 
 		foreach ( $defaults as $key => $value ) {

@@ -183,8 +183,8 @@ $output_formats = $settings->get_output_formats();
 					</th>
 					<td>
 						<?php $thumbnail_width = $settings->get( 'atdw_live_thumbnail_width' ); ?>
-						<input type="number" id="atdw_live_thumbnail_width" name="atdw_live_thumbnail_width" <?php echo ( $thumbnail_width !== '' && $thumbnail_width !== null ) ? 'value="' . esc_attr( $thumbnail_width ) . '"' : ''; ?> class="small-text" step="1" placeholder="150" />
-						<p class="description"><?php esc_html_e( 'Width in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
+						<input type="number" id="atdw_live_thumbnail_width" name="atdw_live_thumbnail_width" <?php echo ( $thumbnail_width !== '' && $thumbnail_width !== null ) ? 'value="' . esc_attr( $thumbnail_width ) . '"' : ''; ?> class="small-text" step="1" />
+						<p class="description"><?php esc_html_e( 'Width in pixels for gallery thumbnails. Leave empty for auto sizing.', 'atdw-live-products' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -193,8 +193,39 @@ $output_formats = $settings->get_output_formats();
 					</th>
 					<td>
 						<?php $thumbnail_height = $settings->get( 'atdw_live_thumbnail_height' ); ?>
-						<input type="number" id="atdw_live_thumbnail_height" name="atdw_live_thumbnail_height" <?php echo ( $thumbnail_height !== '' && $thumbnail_height !== null ) ? 'value="' . esc_attr( $thumbnail_height ) . '"' : ''; ?> class="small-text" step="1" placeholder="150" />
-						<p class="description"><?php esc_html_e( 'Height in pixels for gallery thumbnails. Default: 150', 'atdw-live-products' ); ?></p>
+						<input type="number" id="atdw_live_thumbnail_height" name="atdw_live_thumbnail_height" <?php echo ( $thumbnail_height !== '' && $thumbnail_height !== null ) ? 'value="' . esc_attr( $thumbnail_height ) . '"' : ''; ?> class="small-text" step="1" />
+						<p class="description"><?php esc_html_e( 'Height in pixels for gallery thumbnails. Leave empty for auto sizing.', 'atdw-live-products' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<!-- Badge Settings -->
+		<div class="atdw-card">
+			<h2><?php esc_html_e( 'Badge Settings', 'atdw-live-products' ); ?></h2>
+			<table class="form-table">
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_badge_image_url"><?php esc_html_e( 'Badge Image URL', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="text" id="atdw_live_badge_image_url" name="atdw_live_badge_image_url" value="<?php echo esc_url( $settings->get( 'atdw_live_badge_image_url' ) ); ?>" class="regular-text" />
+						<p class="description">
+							<?php esc_html_e( 'Enter the full URL or relative path of the badge image to display on products with specific attributes.', 'atdw-live-products' ); ?><br>
+							<strong><?php esc_html_e( 'Note:', 'atdw-live-products' ); ?></strong> <?php esc_html_e( 'Use the badge parameter in the shortcode to specify which attributeTypeId should trigger the badge display.', 'atdw-live-products' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="atdw_live_badge_attribute_type"><?php esc_html_e( 'Badge Attribute Type ID', 'atdw-live-products' ); ?></label>
+					</th>
+					<td>
+						<input type="text" id="atdw_live_badge_attribute_type" name="atdw_live_badge_attribute_type" value="<?php echo esc_attr( $settings->get( 'atdw_live_badge_attribute_type' ) ); ?>" class="regular-text" />
+						<p class="description">
+							<?php esc_html_e( 'Enter the Attribute Type ID that should trigger the badge display (e.g., "ENTITY FAC", "TOURISMORG").', 'atdw-live-products' ); ?><br>
+							<strong><?php esc_html_e( 'Note:', 'atdw-live-products' ); ?></strong> <?php esc_html_e( 'This will be used as the default value if no badge parameter is specified in the shortcode.', 'atdw-live-products' ); ?>
+						</p>
 					</td>
 				</tr>
 			</table>

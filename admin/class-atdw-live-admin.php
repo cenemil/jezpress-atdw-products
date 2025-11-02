@@ -287,6 +287,15 @@ class ATDW_Live_Admin {
 			}
 		}
 
+		// Badge Settings
+		if ( isset( $_POST['atdw_live_badge_image_url'] ) ) {
+			$this->settings->update( 'atdw_live_badge_image_url', sanitize_text_field( $_POST['atdw_live_badge_image_url'] ) );
+		}
+
+		if ( isset( $_POST['atdw_live_badge_attribute_type'] ) ) {
+			$this->settings->update( 'atdw_live_badge_attribute_type', sanitize_text_field( $_POST['atdw_live_badge_attribute_type'] ) );
+		}
+
 		// Show success message
 		add_settings_error(
 			'atdw_live_settings',
