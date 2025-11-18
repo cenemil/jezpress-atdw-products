@@ -489,6 +489,12 @@ For issues, questions, or contributions:
 
 ## Changelog
 
+### Version 1.3.1
+- Fixed pagination to preserve search and sort parameters
+- Previous/Next buttons now maintain search keywords, suburb filters, and sort order
+- Search state properly cleared when returning to regular browsing
+- Improved separation between search results and regular product listings
+
 ### Version 1.3.0
 - Version bump release
 - Maintenance update

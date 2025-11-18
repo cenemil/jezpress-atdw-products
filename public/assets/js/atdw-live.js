@@ -53,6 +53,11 @@
 				// Set current page
 				$container.data('current-page', initialPage);
 
+				// Clear any search state on initial load
+				$container.data('is-search-result', false);
+				$container.data('search-params', null);
+				$container.data('search-current-page', null);
+
 				// Initialize pagination if enabled
 				if ($container.data('show-pagination') === 'yes') {
 					ATDWLive.initPagination($container);
@@ -895,6 +900,7 @@
 		// Attach click handlers to inline navigation buttons
 		$resultsCount.find('.atdw-results-prev, .atdw-results-next').on('click', function() {
 			var page = parseInt($(this).data('page'));
+			// Check if this is a search result to use correct pagination method
 			if ($container.data('is-search-result')) {
 				ATDWLive.loadSearchPage($container, page);
 			} else {
@@ -1332,22 +1338,24 @@
 					$loading.hide();
 
 					if (response.success && response.data) {
+						var products = response.data.products || response.data.product || [];
+						if (!Array.isArray(products)) {
+							products = [products];
+						}
+
+						// Store search params and flags BEFORE displaying products
+						// This ensures inline navigation buttons know it's a search result
+						$targetContainer.data('search-params', params);
+						$targetContainer.data('is-search-result', true);
+						$targetContainer.data('search-current-page', 1);
+						$targetContainer.data('current-page', 1);
+
 						// Pass full response data including numberOfResults
 						// displayProducts will respect container's layout, columns, show-image, show-excerpt settings
 						ATDWLive.displayProducts(response.data, $targetContainer);
 
-						// For search results, replace pagination with search-specific pagination
+						// For search results, update pagination display
 						if ($targetContainer.data('show-pagination') === 'yes') {
-							var products = response.data.products || response.data.product || [];
-							if (!Array.isArray(products)) {
-								products = [products];
-							}
-
-							// Store search params for pagination
-							$targetContainer.data('search-params', params);
-							$targetContainer.data('is-search-result', true);
-							$targetContainer.data('search-current-page', 1);
-
 							// Check if there are more results
 							var hasMore = products.length >= params.size;
 
@@ -1408,6 +1416,11 @@
 		 * Load a specific page using ATDW API pagination
 		 */
 		loadPage: function($container, page) {
+			// Clear search state when loading regular pages
+			$container.data('is-search-result', false);
+			$container.data('search-params', null);
+			$container.data('search-current-page', null);
+
 			var params = $container.data('params');
 			var apiParams = {};
 
