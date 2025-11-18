@@ -489,6 +489,10 @@ For issues, questions, or contributions:
 
 ## Changelog
 
+### Version 1.3.0
+- Version bump release
+- Maintenance update
+
 ### Version 1.2.0
 - Added new `[atdw_live_meta]` shortcode for displaying individual product meta fields
 - Smart ID detection: automatically uses URL query parameter `?id=PRODUCT_ID` if not explicitly provided
