@@ -44,6 +44,21 @@ class ATDW_Live_API_Proxy {
 
 		// AJAX handler for testing connection
 		add_action( 'wp_ajax_atdw_live_test_connection', array( $this, 'ajax_test_connection' ) );
+
+		// AJAX handler for issuing a fresh nonce (bypasses stale nonces baked into cached HTML)
+		add_action( 'wp_ajax_atdw_live_get_nonce', array( $this, 'ajax_get_nonce' ) );
+		add_action( 'wp_ajax_nopriv_atdw_live_get_nonce', array( $this, 'ajax_get_nonce' ) );
+	}
+
+	/**
+	 * AJAX handler for issuing a fresh nonce
+	 *
+	 * POST responses from admin-ajax.php are not cached by page/CDN caches,
+	 * so the frontend fetches a nonce here instead of trusting the one
+	 * localized into the (potentially cached) page HTML.
+	 */
+	public function ajax_get_nonce() {
+		wp_send_json_success( array( 'nonce' => wp_create_nonce( 'atdw_live_nonce' ) ) );
 	}
 
 	/**
@@ -100,7 +115,21 @@ class ATDW_Live_API_Proxy {
 	}
 
 	/**
-	 * Make API request
+	 * Generate cache key for a request.
+	 *
+	 * @param string $endpoint API endpoint.
+	 * @param array  $params Query parameters (without API key).
+	 * @return string Cache key.
+	 */
+	private function get_cache_key( $endpoint, $params ) {
+		// Remove API key and output format from cache key — they don't affect the data.
+		$cache_params = $params;
+		unset( $cache_params['key'], $cache_params['out'] );
+		return 'atdw_cache_' . md5( $endpoint . serialize( $cache_params ) );
+	}
+
+	/**
+	 * Make API request with server-side transient caching.
 	 *
 	 * @param string $endpoint API endpoint.
 	 * @param array  $params Query parameters.
@@ -138,6 +167,22 @@ class ATDW_Live_API_Proxy {
 			}
 		}
 
+		// --- Server-side transient caching ---
+		$cache_enabled = (bool) $this->settings->get( 'atdw_live_cache_enabled', true );
+		$cache_ttl     = (int) $this->settings->get( 'atdw_live_cache_ttl', 14400 ); // Default 4 hours.
+		$cache_key     = $this->get_cache_key( $endpoint, $params );
+		$fallback_key  = 'atdw_fallback_' . md5( $endpoint . serialize( array_diff_key( $params, array( 'key' => '', 'out' => '' ) ) ) );
+
+		if ( $cache_enabled ) {
+			$cached = get_transient( $cache_key );
+			if ( false !== $cached ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( 'ATDW Cache HIT: ' . $cache_key );
+				}
+				return $cached;
+			}
+		}
+
 		// Build URL
 		$base_url = $this->settings->get( 'atdw_live_api_base_url' );
 		$url      = add_query_arg( $params, $base_url . $endpoint );
@@ -158,10 +203,10 @@ class ATDW_Live_API_Proxy {
 			)
 		);
 
-		// Check for errors
+		// Check for errors — try fallback cache on failure
 		if ( is_wp_error( $response ) ) {
 			$this->log_error( 'Request failed', $response->get_error_message(), $url );
-			return $response;
+			return $this->get_fallback_or_error( $fallback_key, $response );
 		}
 
 		// Get response code
@@ -174,7 +219,8 @@ class ATDW_Live_API_Proxy {
 				$response_code
 			);
 			$this->log_error( 'API Error', $error_message, $url );
-			return new WP_Error( 'api_error', $error_message, array( 'status' => $response_code ) );
+			$wp_error = new WP_Error( 'api_error', $error_message, array( 'status' => $response_code ) );
+			return $this->get_fallback_or_error( $fallback_key, $wp_error );
 		}
 
 		// Get body
@@ -344,10 +390,40 @@ class ATDW_Live_API_Proxy {
 			}
 
 			$this->log_error( 'Parse Error', $error_message . ' | Body preview: ' . substr( $body, 0, 200 ), $url );
-			return new WP_Error( 'parse_error', $error_message );
+			$wp_error = new WP_Error( 'parse_error', $error_message );
+			return $this->get_fallback_or_error( $fallback_key, $wp_error );
+		}
+
+		// --- Cache the successful response ---
+		if ( $cache_enabled ) {
+			set_transient( $cache_key, $data, $cache_ttl );
+			// Fallback transient at 6x TTL (stale-while-revalidate backup).
+			set_transient( $fallback_key, $data, $cache_ttl * 6 );
+
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'ATDW Cache SET: ' . $cache_key . ' (TTL: ' . $cache_ttl . 's)' );
+			}
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Return fallback cached data or the original error.
+	 *
+	 * @param string   $fallback_key Fallback transient key.
+	 * @param WP_Error $error        Original error.
+	 * @return array|WP_Error Fallback data or original error.
+	 */
+	private function get_fallback_or_error( $fallback_key, $error ) {
+		$fallback = get_transient( $fallback_key );
+		if ( false !== $fallback ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'ATDW Cache FALLBACK served (stale): ' . $fallback_key );
+			}
+			return $fallback;
+		}
+		return $error;
 	}
 
 	/**

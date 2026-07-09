@@ -2247,14 +2247,35 @@
 	}
 	};
 
+	/**
+	 * Fetch a fresh nonce before initializing.
+	 *
+	 * The nonce localized into the page HTML (atdwLive.nonce) can go stale
+	 * when the page is served from a page/CDN cache. admin-ajax.php POST
+	 * responses aren't cached, so requesting a fresh nonce here avoids
+	 * relying on cache configuration/exclusions, for both logged-in and
+	 * incognito/logged-out visitors.
+	 */
+	function initWithFreshNonce() {
+		$.post(atdwLive.ajaxUrl, { action: 'atdw_live_get_nonce' })
+			.done(function(response) {
+				if (response && response.success && response.data && response.data.nonce) {
+					atdwLive.nonce = response.data.nonce;
+				}
+			})
+			.always(function() {
+				ATDWLive.init();
+
+				// Initialize GLightbox for all galleries
+				if (typeof GLightbox !== 'undefined') {
+					ATDWLive.initGLightbox(); // Initialize GLightbox using our wrapper
+				}
+			});
+	}
+
 	// Initialize on document ready
 	$(document).ready(function() {
-		ATDWLive.init();
-
-		// Initialize GLightbox for all galleries
-		if (typeof GLightbox !== 'undefined') {
-			ATDWLive.initGLightbox(); // Initialize GLightbox using our wrapper
-		}
+		initWithFreshNonce();
 	});
 
 })(jQuery);

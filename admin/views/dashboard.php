@@ -41,6 +41,10 @@ $org_number = get_option( 'atdw_live_org_number' );
 					<button type="button" class="button button-primary" id="atdw-live-test-connection">
 						<?php esc_html_e( 'Test Connection', 'atdw-live-products' ); ?>
 					</button>
+					<button type="button" class="button" id="atdw-live-purge-cache" style="color:#d63638;">
+						<span class="dashicons dashicons-trash" style="vertical-align:middle;margin-top:-2px;"></span>
+						<?php esc_html_e( 'Purge ATDW Cache', 'atdw-live-products' ); ?>
+					</button>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=atdw-live-settings' ) ); ?>" class="button">
 						<?php esc_html_e( 'Settings', 'atdw-live-products' ); ?>
 					</a>

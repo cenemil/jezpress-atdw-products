@@ -56,6 +56,7 @@ class ATDW_Live_Admin {
 
 		// Handle AJAX requests
 		add_action( 'wp_ajax_atdw_live_clear_errors', array( $this, 'ajax_clear_errors' ) );
+		add_action( 'wp_ajax_atdw_live_purge_cache', array( $this, 'ajax_purge_cache' ) );
 
 		// Add settings link to plugins page
 		add_filter( 'plugin_action_links_' . ATDW_LIVE_PLUGIN_BASENAME, array( $this, 'add_action_links' ) );
@@ -155,9 +156,36 @@ class ATDW_Live_Admin {
 	}
 
 	/**
+	 * Check if license is active. If not, render a gate message and return true.
+	 *
+	 * @return bool True if gated (license inactive), false if OK to proceed.
+	 */
+	private function render_license_gate() {
+		$license = Jezweb_License::get_instance();
+		if ( $license && ! $license->should_disable_plugin() ) {
+			return false;
+		}
+		$license_url = admin_url( 'admin.php?page=atdw-live-products-license' );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'ATDW Live Products', 'atdw-live-products' ); ?></h1>
+			<div class="notice notice-warning" style="padding:12px 20px;">
+				<h3 style="margin:0 0 8px;"><?php esc_html_e( 'License Required', 'atdw-live-products' ); ?></h3>
+				<p><?php esc_html_e( 'Please activate your license to access plugin settings and features.', 'atdw-live-products' ); ?></p>
+				<p><a href="<?php echo esc_url( $license_url ); ?>" class="button button-primary"><?php esc_html_e( 'Activate License', 'atdw-live-products' ); ?></a></p>
+			</div>
+		</div>
+		<?php
+		return true;
+	}
+
+	/**
 	 * Render dashboard page
 	 */
 	public function render_dashboard_page() {
+		if ( $this->render_license_gate() ) {
+			return;
+		}
 		include ATDW_LIVE_PLUGIN_DIR . 'admin/views/dashboard.php';
 	}
 
@@ -165,6 +193,9 @@ class ATDW_Live_Admin {
 	 * Render settings page
 	 */
 	public function render_settings_page() {
+		if ( $this->render_license_gate() ) {
+			return;
+		}
 		// Handle form submission
 		if ( isset( $_POST['atdw_live_settings_submit'] ) && check_admin_referer( 'atdw_live_settings_save', 'atdw_live_settings_nonce' ) ) {
 			$this->save_settings();
@@ -177,6 +208,9 @@ class ATDW_Live_Admin {
 	 * Render logs page
 	 */
 	public function render_logs_page() {
+		if ( $this->render_license_gate() ) {
+			return;
+		}
 		include ATDW_LIVE_PLUGIN_DIR . 'admin/views/logs.php';
 	}
 
@@ -303,6 +337,43 @@ class ATDW_Live_Admin {
 			__( 'Settings saved successfully!', 'atdw-live-products' ),
 			'success'
 		);
+	}
+
+	/**
+	 * AJAX: Purge all ATDW transient caches.
+	 */
+	public function ajax_purge_cache() {
+		check_ajax_referer( 'atdw_live_admin_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied', 'atdw-live-products' ) ) );
+		}
+
+		global $wpdb;
+
+		// Delete all primary cache transients.
+		$deleted_cache = $wpdb->query(
+			"DELETE FROM {$wpdb->options}
+			 WHERE option_name LIKE '_transient_atdw_cache_%'
+			    OR option_name LIKE '_transient_timeout_atdw_cache_%'"
+		);
+
+		// Delete all fallback transients.
+		$deleted_fallback = $wpdb->query(
+			"DELETE FROM {$wpdb->options}
+			 WHERE option_name LIKE '_transient_atdw_fallback_%'
+			    OR option_name LIKE '_transient_timeout_atdw_fallback_%'"
+		);
+
+		$total = intval( $deleted_cache ) + intval( $deleted_fallback );
+
+		wp_send_json_success( array(
+			'message' => sprintf(
+				/* translators: %d: number of transient rows deleted */
+				__( 'Cache purged! %d transient rows cleared.', 'atdw-live-products' ),
+				$total
+			),
+		) );
 	}
 
 	/**

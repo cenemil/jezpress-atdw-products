@@ -1,13 +1,12 @@
 <?php
 /**
  * Plugin Name: ATDW Live Products
- * Plugin URI: https://github.com/cenemil/atdw-live-products
- * Description: Display Australian tourism products from ATDW API using real-time JavaScript fetching (no database sync)
- * Version: 1.3.1
+ * Plugin URI: https://www.jezweb.com.au
+ * Description: Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
+ * Version: 3.0.0
  * Author: Jezweb
  * Author URI: https://www.jezweb.com.au
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: Proprietary
  * Text Domain: atdw-live-products
  * Domain Path: /languages
  * Requires at least: 5.8
@@ -20,10 +19,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ATDW_LIVE_VERSION', '1.3.1' );
+define( 'ATDW_LIVE_VERSION', '3.0.0' );
 define( 'ATDW_LIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+define( 'ATDW_LIVE_FILE', __FILE__ );
+
+// JezPress update server constants
+define( 'ATDW_LIVE_JEZPRESS_SLUG', 'atdw-live-products' );
+define( 'ATDW_LIVE_JEZPRESS_API', 'https://updates.jezpress.com' );
+
+// --- JezPress Auto-Updater ---
+require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jezweb-jezpress-updater.php';
+
+// --- JezPress License Handler ---
+require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jezweb-license.php';
+
+// Initialize updater early — NOT gated by is_admin() because WP cron
+// auto-updates need these hooks to fire outside admin context.
+$updater = new Jezweb_JezPress_Updater( ATDW_LIVE_FILE );
+$updater->set_slug( ATDW_LIVE_JEZPRESS_SLUG )
+        ->set_api_url( ATDW_LIVE_JEZPRESS_API );
+
+// Pass the license key so JezPress can authenticate downloads.
+$_atdw_license = Jezweb_License::get_instance( ATDW_LIVE_FILE, ATDW_LIVE_JEZPRESS_SLUG, 'ATDW Live Products' );
+$_atdw_lic_key = $_atdw_license->get_license_key();
+if ( ! empty( $_atdw_lic_key ) ) {
+	$updater->set_license( $_atdw_lic_key );
+}
+unset( $_atdw_lic_key );
+
+$updater->initialize();
 
 /**
  * Main ATDW Live Products Class
@@ -136,6 +162,12 @@ final class ATDW_Live_Products {
 	public function deactivate() {
 		// Clear any transients
 		delete_transient( 'atdw_live_activation_notice' );
+
+		// Clean up license cron
+		$license = Jezweb_License::get_instance();
+		if ( $license ) {
+			$license->cleanup();
+		}
 	}
 
 	/**
@@ -146,14 +178,24 @@ final class ATDW_Live_Products {
 		$this->settings  = new ATDW_Live_Settings();
 		$this->api_proxy = new ATDW_Live_API_Proxy( $this->settings );
 
-		// Initialize admin
+		// Initialize license — registers admin menu + notices via init()
+		$license = Jezweb_License::get_instance(
+			ATDW_LIVE_FILE,
+			ATDW_LIVE_JEZPRESS_SLUG,
+			'ATDW Live Products'
+		);
+		$license->init();
+
+		// Admin always loads (so menu, settings, cache purge are accessible)
 		if ( is_admin() ) {
 			new ATDW_Live_Admin( $this->settings, $this->api_proxy );
 		}
 
-		// Initialize public
+		// Public frontend only loads when license is valid
 		if ( ! is_admin() ) {
-			new ATDW_Live_Public( $this->settings );
+			if ( ! $license->should_disable_plugin() ) {
+				new ATDW_Live_Public( $this->settings );
+			}
 		}
 
 		// Allow other plugins to hook in
