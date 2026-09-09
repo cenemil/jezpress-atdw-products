@@ -55,7 +55,7 @@
 					alert('Failed to purge cache.');
 				})
 				.always(function() {
-					$btn.prop('disabled', false).html('<span class="dashicons dashicons-trash" style="vertical-align:middle;margin-top:-2px;"></span> Purge ATDW Cache');
+					$btn.prop('disabled', false).html('<span class="dashicons dashicons-trash"></span> Purge ATDW Cache');
 				});
 			}
 		});

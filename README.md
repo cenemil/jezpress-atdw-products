@@ -1,14 +1,14 @@
-# ATDW Live Products
+# Jezpress ATDW Products
 
 A lightweight WordPress plugin to display Australian tourism products from the ATDW (Australian Tourism Data Warehouse) ATLAS API using real-time JavaScript fetching - **no database sync required**.
 
 ## Description
 
-ATDW Live Products provides a modern, client-side approach to displaying tourism products from the ATDW API. Unlike traditional sync-based plugins, this plugin fetches data in real-time using JavaScript, eliminating the need for database storage, cron jobs, and manual syncing.
+Jezpress ATDW Products provides a modern, client-side approach to displaying tourism products from the ATDW API. Unlike traditional sync-based plugins, this plugin fetches data in real-time using JavaScript, eliminating the need for database storage, cron jobs, and manual syncing.
 
 ## Key Differences from Sync-Based Plugins
 
-### ATDW Live Products (This Plugin)
+### Jezpress ATDW Products (This Plugin)
 - No database storage - Products fetched on-demand
 - No sync required - Always shows latest data
 - No cron jobs - No scheduled tasks needed
@@ -39,9 +39,9 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 - **Customizable Layout**: Grid, list, and custom column layouts
 
 ### Admin Features
-- **Dashboard**: Quick overview of plugin status
+- **Single tabbed admin page** (ATDW > Settings/Logs/Shortcodes/License) — API status is folded into the API Settings card, alongside the rest of the settings form
 - **Settings Panel**: Configure API credentials and options
-- **Error Logging**: View and troubleshoot API errors
+- **Error Logging**: View and troubleshoot API errors on the Logs tab
 
 ## Requirements
 
@@ -52,9 +52,9 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 
 ## Installation
 
-1. Upload the `atdw-live-products` folder to the `/wp-content/plugins/` directory
+1. Upload the `jezpress-atdw-products` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to ATDW Live > Settings to configure your API key
+3. Go to ATDW > Settings to configure your API key
 4. Test your API connection
 5. Add shortcodes to your pages
 
@@ -62,7 +62,7 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 
 ### API Settings
 
-1. Navigate to **ATDW Live > Settings**
+1. Navigate to **ATDW > Settings**
 2. Enter your ATDW API Key
 3. Configure the following options:
    - **API Base URL**: Default is `https://atlas.atdw-online.com.au/api/atlas`
@@ -101,6 +101,31 @@ ATDW Live Products provides a modern, client-side approach to displaying tourism
 ```
 
 ## Version History
+
+### 4.0.0
+- Version bump marking the plugin rename to "Jezpress ATDW Products" and the merged tabbed admin UI (Settings/Logs/Shortcodes/License)
+
+### 3.4.2
+- **Hardened nonce endpoints** — `atdw_live_get_nonce` and `atdw_live_fetch` now send explicit `nocache_headers()`, closing a gap where an aggressive page/CDN cache could cache the nonce/fetch AJAX responses themselves and hand guests a stale nonce or stale data
+
+### 3.4.1
+- **Fixed** Purge ATDW Cache button icon alignment — replaced an inline style with a shared `.button .dashicons` rule
+
+### 3.4.0
+- **New Shortcodes tab** — the shortcode reference card moved out of Settings into its own tab
+
+### 3.3.0
+- **Merged cards** — API Status folded into API Settings (status, Test Connection, Purge Cache all in one card)
+- **Removed** the System Information card from the Settings tab
+
+### 3.2.0
+- **Renamed plugin** to "Jezpress ATDW Products"
+- **Renamed admin menu** — WP sidebar entry changed from "ATDW Live" to "ATDW"
+
+### 3.1.0
+- **Merged admin UI** — Dashboard and Settings pages combined into one Settings tab
+- **Tabbed panel structure** — ATDW > Settings / Logs / License, matching the JezPress Events admin layout
+- **License moved to a tab** — no longer a separate submenu page
 
 ### 2.1.1 (2026-03-05)
 - **JezPress license management** — license key required for activation with admin gating

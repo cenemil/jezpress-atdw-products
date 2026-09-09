@@ -53,11 +53,18 @@ class ATDW_Live_API_Proxy {
 	/**
 	 * AJAX handler for issuing a fresh nonce
 	 *
-	 * POST responses from admin-ajax.php are not cached by page/CDN caches,
-	 * so the frontend fetches a nonce here instead of trusting the one
-	 * localized into the (potentially cached) page HTML.
+	 * admin-ajax.php sends no-cache headers by default, but the whole reason
+	 * this endpoint exists is that this site's page/CDN cache was already
+	 * observed ignoring that and caching the nonce baked into page HTML. An
+	 * aggressive cache that ignores request method could just as easily cache
+	 * *this* endpoint's response too — every guest sharing that cached entry
+	 * would then be handed the same nonce long after it expires, so their
+	 * later atdw_live_fetch calls fail nonce verification (and, if that cached
+	 * nonce response itself is old, they never even get a genuinely fresh
+	 * one). Force no-cache headers here rather than relying on core/config.
 	 */
 	public function ajax_get_nonce() {
+		nocache_headers();
 		wp_send_json_success( array( 'nonce' => wp_create_nonce( 'atdw_live_nonce' ) ) );
 	}
 
@@ -65,6 +72,11 @@ class ATDW_Live_API_Proxy {
 	 * AJAX handler for fetching products
 	 */
 	public function ajax_fetch_products() {
+		// Belt-and-suspenders alongside ajax_get_nonce(): guest responses must
+		// never be cacheable, or a stale response can outlive the nonce that
+		// produced it and get replayed to other visitors as if authorized.
+		nocache_headers();
+
 		// Verify nonce
 		check_ajax_referer( 'atdw_live_nonce', 'nonce' );
 

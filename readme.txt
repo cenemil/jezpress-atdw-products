@@ -1,17 +1,17 @@
-=== ATDW Live Products ===
+=== Jezpress ATDW Products ===
 Contributors: jezweb
 Tags: atdw, tourism, products, api, caching
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 4.0.0
 License: Proprietary
 
 Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
 
 == Description ==
 
-ATDW Live Products connects your WordPress site to the Australian Tourism Data Warehouse (ATDW) API, displaying tourism listings with automatic server-side caching.
+Jezpress ATDW Products connects your WordPress site to the Australian Tourism Data Warehouse (ATDW) API, displaying tourism listings with automatic server-side caching.
 
 Features:
 
@@ -25,6 +25,31 @@ Features:
 * Automatic updates via JezPress
 
 == Changelog ==
+
+= 4.0.0 =
+* Version bump marking the plugin rename to "Jezpress ATDW Products" and the merged tabbed admin UI (Settings/Logs/Shortcodes/License)
+
+= 3.4.2 =
+* Hardened the nonce endpoints (atdw_live_get_nonce, atdw_live_fetch) with explicit nocache_headers() — closes a loophole where an aggressive page/CDN cache (the same class of cache already known to bake stale nonces into page HTML) could cache these AJAX responses too, handing guests a stale/expired nonce or stale product data
+
+= 3.4.1 =
+* Fixed Purge ATDW Cache button icon alignment — replaced the inline style with a shared `.button .dashicons` rule in admin.css
+
+= 3.4.0 =
+* Added a new Shortcodes tab and moved the shortcode reference card there from the Settings tab
+
+= 3.3.0 =
+* Merged the API Status card into API Settings — status, Test Connection and Purge Cache now live in that one card
+* Removed the System Information card from the Settings tab
+
+= 3.2.0 =
+* Renamed plugin to "Jezpress ATDW Products"
+* Renamed the WP admin sidebar menu from "ATDW Live" to "ATDW"
+
+= 3.1.0 =
+* Admin UI restructured into a single "ATDW" page with Settings, Logs and License tabs (matches the JezPress Events admin layout)
+* The separate Dashboard page is gone — its API status summary, shortcode reference and system info now sit at the top of the Settings tab
+* The License page is now a tab on the same page rather than a separate submenu
 
 = 3.0.0 =
 * Fixed frontend AJAX nonce going stale for anonymous visitors behind page/CDN caching

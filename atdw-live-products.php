@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: ATDW Live Products
+ * Plugin Name: Jezpress ATDW Products
  * Plugin URI: https://www.jezweb.com.au
  * Description: Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
- * Version: 3.0.0
+ * Version: 4.0.0
  * Author: Jezweb
  * Author URI: https://www.jezweb.com.au
  * License: Proprietary
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ATDW_LIVE_VERSION', '3.0.0' );
+define( 'ATDW_LIVE_VERSION', '4.0.0' );
 define( 'ATDW_LIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -42,7 +42,7 @@ $updater->set_slug( ATDW_LIVE_JEZPRESS_SLUG )
         ->set_api_url( ATDW_LIVE_JEZPRESS_API );
 
 // Pass the license key so JezPress can authenticate downloads.
-$_atdw_license = Jezweb_License::get_instance( ATDW_LIVE_FILE, ATDW_LIVE_JEZPRESS_SLUG, 'ATDW Live Products' );
+$_atdw_license = Jezweb_License::get_instance( ATDW_LIVE_FILE, ATDW_LIVE_JEZPRESS_SLUG, 'Jezpress ATDW Products' );
 $_atdw_lic_key = $_atdw_license->get_license_key();
 if ( ! empty( $_atdw_lic_key ) ) {
 	$updater->set_license( $_atdw_lic_key );
@@ -52,7 +52,7 @@ unset( $_atdw_lic_key );
 $updater->initialize();
 
 /**
- * Main ATDW Live Products Class
+ * Main Jezpress ATDW Products Class
  */
 final class ATDW_Live_Products {
 
@@ -178,11 +178,11 @@ final class ATDW_Live_Products {
 		$this->settings  = new ATDW_Live_Settings();
 		$this->api_proxy = new ATDW_Live_API_Proxy( $this->settings );
 
-		// Initialize license — registers admin menu + notices via init()
+		// Initialize license — registers admin notices + the License tab content via init()
 		$license = Jezweb_License::get_instance(
 			ATDW_LIVE_FILE,
 			ATDW_LIVE_JEZPRESS_SLUG,
-			'ATDW Live Products'
+			'Jezpress ATDW Products'
 		);
 		$license->init();
 

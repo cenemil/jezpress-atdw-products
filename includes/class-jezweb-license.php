@@ -111,7 +111,9 @@ class Jezweb_License {
         $this->slug          = sanitize_title( $slug );
         $this->plugin_name   = sanitize_text_field( $plugin_name );
         $this->option_name   = 'jzwb_lic_' . substr( md5( $this->slug ), 0, 8 );
-        $this->menu_slug     = $this->slug . '-license';
+        // Hardcoded rather than slug-derived: License is a tab on the single merged
+        // "atdw-live" admin page, not its own submenu — see ATDW_Live_Admin::render_page().
+        $this->menu_slug     = 'atdw-live';
         $this->security_salt = $this->generate_site_salt();
     }
 
@@ -172,12 +174,10 @@ class Jezweb_License {
      * @return void
      */
     public function init() {
-        // Admin hooks.
-        add_action( 'admin_menu', array( $this, 'add_license_menu' ), 99 );
-        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        // Admin hooks. No menu registration here — License is a tab on the merged
+        // "atdw-live" admin page; see ATDW_Live_Admin::register_menu().
         add_action( 'admin_init', array( $this, 'handle_license_actions' ) );
         add_action( 'admin_notices', array( $this, 'admin_notices' ) );
-        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
 
         // Plugin action links.
         add_filter( 'plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'plugin_action_links' ) );
@@ -647,31 +647,6 @@ class Jezweb_License {
     }
 
     /**
-     * Add license menu under plugin's menu.
-     *
-     * @return void
-     */
-    public function add_license_menu() {
-        add_submenu_page(
-            'atdw-live',
-            __( 'License', 'atdw-live-products' ),
-            __( 'License', 'atdw-live-products' ),
-            'manage_options',
-            $this->menu_slug,
-            array( $this, 'render_license_page' )
-        );
-    }
-
-    /**
-     * Register settings.
-     *
-     * @return void
-     */
-    public function register_settings() {
-        register_setting( $this->menu_slug, $this->option_name );
-    }
-
-    /**
      * Handle license actions (activate/deactivate).
      *
      * @return void
@@ -713,7 +688,7 @@ class Jezweb_License {
                     'message' => $result['message'],
                 ), 30 );
                 // Redirect to refresh the page and show updated status.
-                wp_safe_redirect( admin_url( 'admin.php?page=' . $this->menu_slug . '&activated=1' ) );
+                wp_safe_redirect( admin_url( 'admin.php?page=' . $this->menu_slug . '&tab=license&activated=1' ) );
                 exit;
             } else {
                 add_settings_error( $this->menu_slug, 'activation_failed', $result['message'], 'error' );
@@ -728,7 +703,7 @@ class Jezweb_License {
                     'message' => $result['message'],
                 ), 30 );
                 // Redirect to refresh the page and show updated status.
-                wp_safe_redirect( admin_url( 'admin.php?page=' . $this->menu_slug . '&deactivated=1' ) );
+                wp_safe_redirect( admin_url( 'admin.php?page=' . $this->menu_slug . '&tab=license&deactivated=1' ) );
                 exit;
             } else {
                 add_settings_error( $this->menu_slug, 'deactivation_failed', $result['message'], 'error' );
@@ -773,7 +748,7 @@ class Jezweb_License {
 
         // Check if license is required and not valid.
         if ( $this->required && ! $this->is_valid() ) {
-            $license_url = admin_url( 'admin.php?page=' . $this->menu_slug );
+            $license_url = admin_url( 'admin.php?page=' . $this->menu_slug . '&tab=license' );
             ?>
             <div class="notice notice-error">
                 <p>
@@ -795,9 +770,11 @@ class Jezweb_License {
      * @return array Modified links.
      */
     public function plugin_action_links( $links ) {
+        // ATDW_Live_Admin::add_action_links(), hooked to the same filter, already
+        // prepends a "Settings" link — only add License here to avoid a duplicate.
         $license_link = sprintf(
             '<a href="%s">%s</a>',
-            admin_url( 'admin.php?page=' . $this->menu_slug ),
+            admin_url( 'admin.php?page=' . $this->menu_slug . '&tab=license' ),
             __( 'License', 'jezweb' )
         );
 
@@ -807,136 +784,75 @@ class Jezweb_License {
     }
 
     /**
-     * Enqueue admin styles.
+     * Render the License tab content for the merged "atdw-live" admin page.
      *
-     * @param string $hook Current admin page.
-     * @return void
-     */
-    public function enqueue_admin_styles( $hook ) {
-        if ( strpos( $hook, $this->menu_slug ) === false ) {
-            return;
-        }
-
-        wp_add_inline_style( 'wp-admin', $this->get_admin_styles() );
-    }
-
-    /**
-     * Get admin styles.
-     *
-     * @return string CSS styles.
-     */
-    private function get_admin_styles() {
-        return '
-            .jezweb-license-wrap {
-                max-width: 800px;
-                margin: 20px 0;
-            }
-            .jezweb-license-box {
-                background: #fff;
-                border: 1px solid #ccd0d4;
-                border-radius: 4px;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-            .jezweb-license-box h2 {
-                margin-top: 0;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
-            }
-            .jezweb-license-key-input {
-                width: 100%;
-                max-width: 400px;
-                padding: 10px;
-                font-size: 16px;
-                font-family: monospace;
-                letter-spacing: 2px;
-            }
-            .jezweb-license-status {
-                display: inline-block;
-                padding: 5px 15px;
-                border-radius: 3px;
-                font-weight: bold;
-                margin-left: 10px;
-            }
-            .jezweb-license-status.active {
-                background: #d4edda;
-                color: #155724;
-            }
-            .jezweb-license-status.inactive {
-                background: #f8d7da;
-                color: #721c24;
-            }
-            .jezweb-license-info {
-                margin-top: 15px;
-                padding: 15px;
-                background: #f8f9fa;
-                border-radius: 4px;
-            }
-            .jezweb-license-info p {
-                margin: 5px 0;
-            }
-            .jezweb-license-features {
-                margin-top: 20px;
-                padding: 15px;
-                background: #fff3cd;
-                border: 1px solid #ffc107;
-                border-radius: 4px;
-            }
-            .jezweb-license-features h3 {
-                margin-top: 0;
-                color: #856404;
-            }
-            .jezweb-license-features ul {
-                margin: 10px 0 0 20px;
-            }
-        ';
-    }
-
-    /**
-     * Render license page.
+     * Styling reuses the shared .admin-page-wrap / .admin-page-card classes
+     * (admin/assets/css/admin.css) rather than a bespoke stylesheet, so this
+     * tab looks like the rest of the plugin's admin page.
      *
      * @return void
      */
-    public function render_license_page() {
+    public function render_tab_content() {
         $license_data = $this->get_license_data();
         $is_active    = $this->is_valid();
         $license_key  = isset( $license_data['key'] ) ? $license_data['key'] : '';
         ?>
-        <div class="wrap jezweb-license-wrap">
-            <h1><?php echo esc_html( sprintf( __( '%s License', 'jezweb' ), $this->plugin_name ) ); ?></h1>
+        <div class="admin-page-wrap">
 
             <?php settings_errors( $this->menu_slug ); ?>
 
-            <div class="jezweb-license-box">
-                <h2>
+            <div class="admin-page-card">
+                <h2 class="admin-page-card-title">
                     <?php esc_html_e( 'License Status', 'jezweb' ); ?>
                     <?php if ( $is_active ) : ?>
-                        <span class="jezweb-license-status active"><?php esc_html_e( 'Active', 'jezweb' ); ?></span>
+                        <span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:12px;font-weight:600;background:#d1fae5;color:#065f46;margin-left:8px;"><?php esc_html_e( 'Active', 'jezweb' ); ?></span>
                     <?php else : ?>
-                        <span class="jezweb-license-status inactive"><?php esc_html_e( 'Inactive', 'jezweb' ); ?></span>
+                        <span style="display:inline-block;padding:2px 10px;border-radius:3px;font-size:12px;font-weight:600;background:#fee2e2;color:#991b1b;margin-left:8px;"><?php esc_html_e( 'Inactive', 'jezweb' ); ?></span>
                     <?php endif; ?>
                 </h2>
 
                 <?php if ( $is_active ) : ?>
-                    <div class="jezweb-license-info">
-                        <p><strong><?php esc_html_e( 'License Key:', 'jezweb' ); ?></strong> <?php echo esc_html( $this->mask_license_key( $license_key ) ); ?></p>
+                    <table class="form-table">
+                        <tr>
+                            <th><?php esc_html_e( 'License Key:', 'jezweb' ); ?></th>
+                            <td><code><?php echo esc_html( $this->mask_license_key( $license_key ) ); ?></code></td>
+                        </tr>
                         <?php if ( ! empty( $license_data['customer'] ) ) : ?>
-                            <p><strong><?php esc_html_e( 'Licensed to:', 'jezweb' ); ?></strong> <?php echo esc_html( $license_data['customer'] ); ?></p>
+                        <tr>
+                            <th><?php esc_html_e( 'Licensed to:', 'jezweb' ); ?></th>
+                            <td><?php echo esc_html( $license_data['customer'] ); ?></td>
+                        </tr>
                         <?php endif; ?>
                         <?php if ( ! empty( $license_data['email'] ) ) : ?>
-                            <p><strong><?php esc_html_e( 'Email:', 'jezweb' ); ?></strong> <?php echo esc_html( $license_data['email'] ); ?></p>
+                        <tr>
+                            <th><?php esc_html_e( 'Email:', 'jezweb' ); ?></th>
+                            <td><?php echo esc_html( $license_data['email'] ); ?></td>
+                        </tr>
                         <?php endif; ?>
                         <?php if ( ! empty( $license_data['domain'] ) ) : ?>
-                            <p><strong><?php esc_html_e( 'Domain:', 'jezweb' ); ?></strong> <?php echo esc_html( $license_data['domain'] ); ?></p>
+                        <tr>
+                            <th><?php esc_html_e( 'Domain:', 'jezweb' ); ?></th>
+                            <td><?php echo esc_html( $license_data['domain'] ); ?></td>
+                        </tr>
                         <?php endif; ?>
-                        <?php if ( ! empty( $license_data['expires'] ) && 'lifetime' !== $license_data['expires'] ) : ?>
-                            <p><strong><?php esc_html_e( 'Expires:', 'jezweb' ); ?></strong> <?php echo esc_html( $license_data['expires'] ); ?></p>
-                        <?php elseif ( 'lifetime' === ( $license_data['expires'] ?? '' ) ) : ?>
-                            <p><strong><?php esc_html_e( 'Expires:', 'jezweb' ); ?></strong> <?php esc_html_e( 'Never (Lifetime)', 'jezweb' ); ?></p>
+                        <?php if ( ! empty( $license_data['expires'] ) ) : ?>
+                        <tr>
+                            <th><?php esc_html_e( 'Expires:', 'jezweb' ); ?></th>
+                            <td>
+                                <?php
+                                if ( 'lifetime' === $license_data['expires'] ) {
+                                    esc_html_e( 'Never (Lifetime)', 'jezweb' );
+                                } else {
+                                    echo esc_html( $license_data['expires'] );
+                                }
+                                ?>
+                            </td>
+                        </tr>
                         <?php endif; ?>
                         <?php if ( isset( $license_data['activations'] ) ) : ?>
-                            <p>
-                                <strong><?php esc_html_e( 'Activations:', 'jezweb' ); ?></strong>
+                        <tr>
+                            <th><?php esc_html_e( 'Activations:', 'jezweb' ); ?></th>
+                            <td>
                                 <?php
                                 if ( isset( $license_data['limit'] ) && 'unlimited' === $license_data['limit'] ) {
                                     echo esc_html( $license_data['activations'] ) . ' / ' . esc_html__( 'Unlimited', 'jezweb' );
@@ -946,11 +862,12 @@ class Jezweb_License {
                                     echo esc_html( $license_data['activations'] );
                                 }
                                 ?>
-                            </p>
+                            </td>
+                        </tr>
                         <?php endif; ?>
-                    </div>
+                    </table>
 
-                    <form method="post" style="margin-top: 20px;">
+                    <form method="post" style="margin-top:16px;">
                         <?php wp_nonce_field( 'jezweb_license_deactivate', 'jezweb_license_nonce' ); ?>
                         <input type="hidden" name="jezweb_license_action" value="deactivate">
                         <input type="hidden" name="jezweb_license_slug" value="<?php echo esc_attr( $this->slug ); ?>">
@@ -960,10 +877,12 @@ class Jezweb_License {
                     </form>
 
                 <?php else : ?>
-                    <div class="jezweb-license-features">
-                        <h3><?php esc_html_e( 'Features Disabled', 'jezweb' ); ?></h3>
-                        <p><?php esc_html_e( 'The following features require license activation:', 'jezweb' ); ?></p>
-                        <ul>
+                    <div class="notice notice-warning inline" style="margin:0 0 16px;">
+                        <p>
+                            <strong><?php esc_html_e( 'Features disabled.', 'jezweb' ); ?></strong>
+                            <?php esc_html_e( 'The following require license activation:', 'jezweb' ); ?>
+                        </p>
+                        <ul class="admin-page-card-section-ul">
                             <li><?php esc_html_e( 'ATDW tourism product listings', 'jezweb' ); ?></li>
                             <li><?php esc_html_e( 'Server-side API caching', 'jezweb' ); ?></li>
                             <li><?php esc_html_e( 'Stale-while-revalidate fallback', 'jezweb' ); ?></li>
@@ -972,22 +891,20 @@ class Jezweb_License {
                         </ul>
                     </div>
 
-                    <p style="margin-top: 20px;"><?php esc_html_e( 'Enter your license key to activate the plugin and enable all features.', 'jezweb' ); ?></p>
+                    <p><?php esc_html_e( 'Enter your license key to activate all plugin features.', 'jezweb' ); ?></p>
 
                     <form method="post">
                         <?php wp_nonce_field( 'jezweb_license_activate', 'jezweb_license_nonce' ); ?>
                         <input type="hidden" name="jezweb_license_action" value="activate">
                         <input type="hidden" name="jezweb_license_slug" value="<?php echo esc_attr( $this->slug ); ?>">
-
                         <p>
                             <input type="text"
                                    name="jezweb_license_key"
-                                   class="jezweb-license-key-input"
+                                   class="regular-text"
                                    placeholder="XXXX-XXXX-XXXX-XXXX"
                                    value=""
                                    autocomplete="off">
                         </p>
-
                         <p>
                             <button type="submit" class="button button-primary">
                                 <?php esc_html_e( 'Activate License', 'jezweb' ); ?>
@@ -997,17 +914,9 @@ class Jezweb_License {
 
                     <p class="description">
                         <?php esc_html_e( 'Your license key was provided when you purchased the plugin.', 'jezweb' ); ?>
+                        <a href="mailto:support@jezweb.net">support@jezweb.net</a>
                     </p>
                 <?php endif; ?>
-            </div>
-
-            <div class="jezweb-license-box">
-                <h2><?php esc_html_e( 'Need a License?', 'jezweb' ); ?></h2>
-                <p><?php esc_html_e( 'If you need a license key, please contact Jezweb:', 'jezweb' ); ?></p>
-                <ul style="list-style: disc; padding-left: 20px;">
-                    <li><strong><?php esc_html_e( 'Email:', 'jezweb' ); ?></strong> <a href="mailto:support@jezweb.net">support@jezweb.net</a></li>
-                    <li><strong><?php esc_html_e( 'Website:', 'jezweb' ); ?></strong> <a href="https://jezweb.com.au" target="_blank">jezweb.com.au</a></li>
-                </ul>
             </div>
         </div>
         <?php
