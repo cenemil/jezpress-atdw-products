@@ -26,7 +26,7 @@ define( 'ATDW_LIVE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 define( 'ATDW_LIVE_FILE', __FILE__ );
 
 // JezPress update server constants
-define( 'ATDW_LIVE_JEZPRESS_SLUG', 'atdw-live-products' );
+define( 'ATDW_LIVE_JEZPRESS_SLUG', 'jezpress-atdw-products' );
 define( 'ATDW_LIVE_JEZPRESS_API', 'https://updates.jezpress.com' );
 
 // --- JezPress Auto-Updater ---

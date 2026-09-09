@@ -40,7 +40,8 @@ Unlike typical ATDW sync plugins, this one never stores product data in the data
 
 Because the nonce can be baked into cached page HTML (full-page caching / CDN), there's a
 `wp_ajax_atdw_live_get_nonce` endpoint the JS calls to fetch a fresh nonce when a request unexpectedly
-fails — see `initWithFreshNonce()` at the bottom of `atdw-live.js`.
+fails — see `initWithFreshNonce()` at the bottom of `atdw-live.js`. Both the nonce and fetch AJAX endpoints
+call `nocache_headers()` so a CDN/full-page cache never caches these AJAX responses themselves either.
 
 ### Key files
 
