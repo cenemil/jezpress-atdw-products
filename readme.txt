@@ -4,7 +4,7 @@ Tags: atdw, tourism, products, api, caching
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.0.0
+Stable tag: 4.0.1
 License: Proprietary
 
 Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
@@ -25,6 +25,11 @@ Features:
 * Automatic updates via JezPress
 
 == Changelog ==
+
+= 4.0.1 =
+* Published as a new JezPress catalogue entry under the `jezpress-atdw-products` slug (was `atdw-live-products`)
+* Renamed the main plugin file and all internal `atdw-live-*`/`class-jezweb-*` class files to a consistent `jatdwp` naming (e.g. `class-jatdwp-admin.php`, `class-jatdwp-updater.php`, `class-jatdwp-license.php`, `public/assets/js/jatdwp.js`) — no functional changes
+* Removed a stale, unused `update-info.json` manifest left over from an earlier release process
 
 = 4.0.0 =
 * Version bump marking the plugin rename to "Jezpress ATDW Products" and the merged tabbed admin UI (Settings/Logs/Shortcodes/License)

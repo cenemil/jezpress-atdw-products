@@ -3,7 +3,7 @@
  * Plugin Name: Jezpress ATDW Products
  * Plugin URI: https://www.jezweb.com.au
  * Description: Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
- * Version: 4.0.0
+ * Version: 4.0.1
  * Author: Jezweb
  * Author URI: https://www.jezweb.com.au
  * License: Proprietary
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ATDW_LIVE_VERSION', '4.0.0' );
+define( 'ATDW_LIVE_VERSION', '4.0.1' );
 define( 'ATDW_LIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'ATDW_LIVE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
