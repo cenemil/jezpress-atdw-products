@@ -30,10 +30,10 @@ define( 'ATDW_LIVE_JEZPRESS_SLUG', 'jezpress-atdw-products' );
 define( 'ATDW_LIVE_JEZPRESS_API', 'https://updates.jezpress.com' );
 
 // --- JezPress Auto-Updater ---
-require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jezweb-jezpress-updater.php';
+require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jatdwp-updater.php';
 
 // --- JezPress License Handler ---
-require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jezweb-license.php';
+require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jatdwp-license.php';
 
 // Initialize updater early — NOT gated by is_admin() because WP cron
 // auto-updates need these hooks to fire outside admin context.

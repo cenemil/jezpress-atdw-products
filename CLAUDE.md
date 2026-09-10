@@ -76,7 +76,7 @@ call `nocache_headers()` so a CDN/full-page cache never caches these AJAX respon
   Shared card styling (`.admin-page-wrap` / `.admin-page-card` / `.admin-page-card-title`) in
   `admin/assets/css/admin.css` is kept in sync with `jezpress-events/assets/css/admin.css` so the two
   plugins' admin pages look like one product — change both if you touch this system.
-- `includes/class-jezweb-license.php` — JezPress license key gating, local to this plugin (not a shared
+- `includes/class-jatdwp-license.php` — JezPress license key gating, local to this plugin (not a shared
   file across Jezweb plugins, despite the generic-sounding name). Exposes `should_disable_plugin()`; when
   the license is inactive, the frontend (`ATDW_Live_Public`) is never instantiated (shortcodes render
   nothing) but the admin UI still loads so users can activate a key. `render_tab_content()` renders just
@@ -85,7 +85,7 @@ call `nocache_headers()` so a CDN/full-page cache never caches these AJAX respon
   hardcoded to `'atdw-live'` purely so its settings-errors group / redirect URLs land on the merged page.
   Includes tamper-resistance checks (`verify_file_integrity()`, source/data signatures) — don't strip these
   when refactoring, they're intentional anti-tamper measures tied to the licensing model.
-- `includes/class-jezweb-jezpress-updater.php` — pulls plugin updates from `https://updates.jezpress.com`
+- `includes/class-jatdwp-updater.php` — pulls plugin updates from `https://updates.jezpress.com`
   using the license key for auth; initialized unconditionally (not gated by `is_admin()`) so cron-based
   auto-updates keep working outside admin requests.
 
