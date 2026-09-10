@@ -17,7 +17,7 @@ To verify changes:
   match the existing style — follow the surrounding file).
 - Manually test by activating the plugin in a local WordPress install and exercising the shortcodes on a
   page, or via the `run` skill if driving a real WP instance.
-- Bump `Version:` in `atdw-live-products.php`'s header AND the `ATDW_LIVE_VERSION` constant together — they
+- Bump `Version:` in `jezpress-atdw-products.php`'s header AND the `ATDW_LIVE_VERSION` constant together — they
   must match, and `readme.txt`/`README.md` version history should be updated too.
 
 ## Architecture
@@ -45,7 +45,7 @@ call `nocache_headers()` so a CDN/full-page cache never caches these AJAX respon
 
 ### Key files
 
-- `atdw-live-products.php` — plugin bootstrap. Defines constants, loads the updater and license classes
+- `jezpress-atdw-products.php` — plugin bootstrap. Defines constants, loads the updater and license classes
   *before* the main singleton (they must initialize independent of `is_admin()` so WP-Cron auto-updates
   still fire), then instantiates `ATDW_Live_Products` which wires up settings/API proxy/admin/public classes.
 - `includes/class-atdw-live-settings.php` — thin wrapper around `get_option()`/`update_option()` for all

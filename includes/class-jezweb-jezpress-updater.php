@@ -37,7 +37,7 @@ class Jezweb_JezPress_Updater {
     private $plugin = array();
 
     /**
-     * Plugin basename (e.g. atdw-live-products/atdw-live-products.php).
+     * Plugin basename (e.g. jezpress-atdw-products/jezpress-atdw-products.php).
      *
      * @var string
      */
