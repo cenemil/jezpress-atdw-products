@@ -93,7 +93,7 @@ class ATDW_Live_Public {
 		// Enqueue JS
 		wp_enqueue_script(
 			'atdw-live-public-js',
-			ATDW_LIVE_PLUGIN_URL . 'public/assets/js/atdw-live.js',
+			ATDW_LIVE_PLUGIN_URL . 'public/assets/js/jatdwp.js',
 			array( 'jquery', 'glightbox-js' ),
 			ATDW_LIVE_VERSION,
 			true

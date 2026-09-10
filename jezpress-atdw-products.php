@@ -102,17 +102,17 @@ final class ATDW_Live_Products {
 	 */
 	private function includes() {
 		// Core classes
-		require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-atdw-live-settings.php';
-		require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-atdw-live-api-proxy.php';
+		require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jatdwp-settings.php';
+		require_once ATDW_LIVE_PLUGIN_DIR . 'includes/class-jatdwp-api-proxy.php';
 
 		// Admin classes
 		if ( is_admin() ) {
-			require_once ATDW_LIVE_PLUGIN_DIR . 'admin/class-atdw-live-admin.php';
+			require_once ATDW_LIVE_PLUGIN_DIR . 'admin/class-jatdwp-admin.php';
 		}
 
 		// Public classes
 		if ( ! is_admin() ) {
-			require_once ATDW_LIVE_PLUGIN_DIR . 'public/class-atdw-live-public.php';
+			require_once ATDW_LIVE_PLUGIN_DIR . 'public/class-jatdwp-public.php';
 		}
 	}
 

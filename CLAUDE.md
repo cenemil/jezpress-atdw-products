@@ -26,11 +26,11 @@ To verify changes:
 
 Unlike typical ATDW sync plugins, this one never stores product data in the database. The flow is:
 
-1. A shortcode (`public/class-atdw-live-public.php`) renders an empty container `<div>` with `data-*`
+1. A shortcode (`public/class-jatdwp-public.php`) renders an empty container `<div>` with `data-*`
    attributes encoding the shortcode's parameters, plus a loading spinner.
-2. `public/assets/js/atdw-live.js` (jQuery, `ATDWLive` object) reads those `data-*` attributes on
+2. `public/assets/js/jatdwp.js` (jQuery, `ATDWLive` object) reads those `data-*` attributes on
    `DOMContentLoaded` and calls `admin-ajax.php` (`action=atdw_live_fetch`) to fetch real data.
-3. `includes/class-atdw-live-api-proxy.php` (`ajax_fetch_products`) validates the nonce, sanitizes params
+3. `includes/class-jatdwp-api-proxy.php` (`ajax_fetch_products`) validates the nonce, sanitizes params
    against an explicit allow-list, and proxies the request server-side to the real ATDW ATLAS API — this
    avoids CORS and keeps the API key server-side.
 4. The proxy applies **transient caching** (`atdw_live_cache_*` transients, default TTL 4h) and a
@@ -40,7 +40,7 @@ Unlike typical ATDW sync plugins, this one never stores product data in the data
 
 Because the nonce can be baked into cached page HTML (full-page caching / CDN), there's a
 `wp_ajax_atdw_live_get_nonce` endpoint the JS calls to fetch a fresh nonce when a request unexpectedly
-fails — see `initWithFreshNonce()` at the bottom of `atdw-live.js`. Both the nonce and fetch AJAX endpoints
+fails — see `initWithFreshNonce()` at the bottom of `jatdwp.js`. Both the nonce and fetch AJAX endpoints
 call `nocache_headers()` so a CDN/full-page cache never caches these AJAX responses themselves either.
 
 ### Key files
@@ -48,22 +48,22 @@ call `nocache_headers()` so a CDN/full-page cache never caches these AJAX respon
 - `jezpress-atdw-products.php` — plugin bootstrap. Defines constants, loads the updater and license classes
   *before* the main singleton (they must initialize independent of `is_admin()` so WP-Cron auto-updates
   still fire), then instantiates `ATDW_Live_Products` which wires up settings/API proxy/admin/public classes.
-- `includes/class-atdw-live-settings.php` — thin wrapper around `get_option()`/`update_option()` for all
+- `includes/class-jatdwp-settings.php` — thin wrapper around `get_option()`/`update_option()` for all
   `atdw_live_*` options (API key, base URL, market variant, cache TTL, gallery/thumbnail dimensions, custom
   CSS, Google Maps key, etc). `ATDW_Live_Settings::get()` is the single read path other classes use.
-- `includes/class-atdw-live-api-proxy.php` — all outbound HTTP to ATDW lives here. Handles ATDW's flaky
+- `includes/class-jatdwp-api-proxy.php` — all outbound HTTP to ATDW lives here. Handles ATDW's flaky
   encoding quirks (UTF-16LE/BE responses, trailing garbage characters, BOMs) before `json_decode`, logs
   errors to the `atdw_live_api_errors` option (last 50, viewable in the Logs admin page), and owns the
   cache-key/fallback-key scheme (cache key excludes `key`/`out` params since they don't affect the data).
-- `public/class-atdw-live-public.php` — registers all four shortcodes (`atdw_live_products`,
+- `public/class-jatdwp-public.php` — registers all four shortcodes (`atdw_live_products`,
   `atdw_live_product`, `atdw_live_search`, `atdw_live_meta`) and enqueues assets only when a shortcode is
   present on the current post (`has_shortcode()` check avoids loading JS/CSS site-wide). Localizes plugin
   settings into `window.atdwLive` for the JS to consume.
-- `public/assets/js/atdw-live.js` — the `ATDWLive` object is the entire frontend runtime: pagination,
+- `public/assets/js/jatdwp.js` — the `ATDWLive` object is the entire frontend runtime: pagination,
   search/filter AJAX calls, and a meta-field renderer (`atdw_live_meta` shortcode) that special-cases
   `map`, `gallery`/`images`, `attributes`, and `nextOccurrence` fields against the raw ATDW product JSON
   (see the `metaKey.toLowerCase() === '...'` branches). Gallery images use GLightbox for the lightbox.
-- `admin/class-atdw-live-admin.php` — single top-level "ATDW" admin page (`admin.php?page=atdw-live`; the
+- `admin/class-jatdwp-admin.php` — single top-level "ATDW" admin page (`admin.php?page=atdw-live`; the
   menu label is "ATDW" but the page slug and URL are still `atdw-live`, left unchanged)
   with a tab nav (`?tab=settings|logs|shortcodes|license`), structured the same way as JezPress Events'
   `class-jpem-admin.php`. There is no `admin/views/` directory — each tab is rendered by a private method
