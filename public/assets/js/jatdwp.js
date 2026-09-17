@@ -20,9 +20,8 @@
 		 */
 		init: function() {
 			this.initProductContainers();
-			this.initSingleContainers();
 			this.initSearchContainers();
-			this.initMetaContainers();
+			this.initProductAndMetaContainers();
 		},
 
 		/**
@@ -65,28 +64,6 @@
 
 				// Load first page with proper pagination
 				ATDWLive.loadPage($container, initialPage);
-			});
-		},
-
-		/**
-		 * Initialize single product containers
-		 */
-		initSingleContainers: function() {
-			$('.atdw-live-single-container').each(function() {
-				var $container = $(this);
-				var endpoint = $container.data('endpoint') || '/product';
-				var productId = $container.data('product-id');
-
-				if (!productId) {
-					return;
-				}
-
-				var params = {
-					productId: productId
-				};
-
-				// Fetch and display single product
-				ATDWLive.fetchSingleProduct(endpoint, params, $container);
 			});
 		},
 
@@ -136,10 +113,17 @@
 		},
 
 		/**
-		 * Initialize meta field containers
+		 * Initialize single-product and meta field containers
+		 *
+		 * Both shortcode types can appear multiple times for the same listing
+		 * on one page (e.g. a details page built from several atdw_live_meta
+		 * fields plus an atdw_live_product block). They're grouped by product
+		 * ID so the listing is only fetched once, and if that fetch fails
+		 * (404/API error), only the first container for that ID shows the
+		 * error message - the rest are hidden instead of repeating it.
 		 */
-		initMetaContainers: function() {
-			var $containers = $('.atdw-live-meta-container');
+		initProductAndMetaContainers: function() {
+			var $containers = $('.atdw-live-single-container, .atdw-live-meta-container');
 
 			// Check if there's an 'id' query parameter in the URL
 			var urlParams = new URLSearchParams(window.location.search);
@@ -147,7 +131,7 @@
 
 			// If there's an id in URL but no containers, fetch the product anyway for potential use
 			if (urlProductId && $containers.length === 0) {
-				ATDWLive.fetchProductForMetaContainers(urlProductId, []);
+				ATDWLive.fetchProductForGroup(urlProductId, []);
 				return;
 			}
 
@@ -161,9 +145,10 @@
 			$containers.each(function() {
 				var $container = $(this);
 				var productId = $container.data('product-id');
-				var metaKey = $container.data('meta-key');
+				var isMeta = $container.hasClass('atdw-live-meta-container');
+				var metaKey = isMeta ? $container.data('meta-key') : null;
 
-				if (!productId || !metaKey) {
+				if (!productId || (isMeta && !metaKey)) {
 					$container.find('.atdw-live-loading').hide();
 					$container.find('.atdw-live-error').show();
 					return;
@@ -173,27 +158,26 @@
 				if (!productGroups[productId]) {
 					productGroups[productId] = [];
 				}
-				productGroups[productId].push($container);
+				productGroups[productId].push({
+					$container: $container,
+					type: isMeta ? 'meta' : 'single'
+				});
 			});
 
 			// Fetch each unique product once and populate all its containers
-			$.each(productGroups, function(productId, containers) {
-				ATDWLive.fetchProductForMetaContainers(productId, containers);
+			$.each(productGroups, function(productId, group) {
+				ATDWLive.fetchProductForGroup(productId, group);
 			});
 		},
 
 		/**
-		 * Fetch product once and populate all meta containers for that product
+		 * Fetch a product once and populate every single-product/meta
+		 * container registered for that product ID.
 		 */
-		fetchProductForMetaContainers: function(productId, containers) {
+		fetchProductForGroup: function(productId, group) {
 			// Check if product is already cached
 			if (ATDWLive.productCache[productId]) {
-				var product = ATDWLive.productCache[productId];
-				// Populate all containers for this product
-				$.each(containers, function(index, $container) {
-					$container.find('.atdw-live-loading').hide();
-					ATDWLive.displayMetaField(product, $container);
-				});
+				ATDWLive.populateProductGroup(ATDWLive.productCache[productId], group);
 				console.log('ATDW: Using cached product data for ID:', productId);
 				return;
 			}
@@ -227,35 +211,54 @@
 						}
 						window.atdwProduct[productId] = product;
 
-						// Populate all containers for this product (if any)
-						if (containers.length > 0) {
-							$.each(containers, function(index, $container) {
-								$container.find('.atdw-live-loading').hide();
-								ATDWLive.displayMetaField(product, $container);
-							});
-						}
+						ATDWLive.populateProductGroup(product, group);
 					} else {
-						// Show error in all containers (if any)
 						var errorMsg = response.data && response.data.message ? response.data.message : 'Error loading product';
-						if (containers.length > 0) {
-							$.each(containers, function(index, $container) {
-								$container.find('.atdw-live-loading').hide();
-								$container.find('.atdw-live-error').find('p').text(errorMsg);
-								$container.find('.atdw-live-error').show();
-							});
-						}
+						ATDWLive.showProductGroupError(group, errorMsg);
 						console.error('ATDW API Error:', response);
 					}
 				},
 				error: function(xhr, status, error) {
-					// Show error in all containers (if any)
-					if (containers.length > 0) {
-						$.each(containers, function(index, $container) {
-							$container.find('.atdw-live-loading').hide();
-							$container.find('.atdw-live-error').show();
-						});
-					}
+					ATDWLive.showProductGroupError(group, null);
 					console.error('AJAX Error:', status, error);
+				}
+			});
+		},
+
+		/**
+		 * Populate every container in a product group with the fetched data.
+		 */
+		populateProductGroup: function(product, group) {
+			$.each(group, function(index, entry) {
+				var $container = entry.$container;
+				$container.find('.atdw-live-loading').hide();
+
+				if (entry.type === 'single') {
+					ATDWLive.displaySingleProduct(product, $container.find('.atdw-live-single-product'));
+				} else {
+					ATDWLive.displayMetaField(product, $container);
+				}
+			});
+		},
+
+		/**
+		 * Show a single error message for a product group instead of
+		 * repeating it in every container tied to the same listing ID.
+		 */
+		showProductGroupError: function(group, errorMsg) {
+			$.each(group, function(index, entry) {
+				var $container = entry.$container;
+				$container.find('.atdw-live-loading').hide();
+
+				if (index === 0) {
+					var $error = $container.find('.atdw-live-error');
+					if (errorMsg) {
+						$error.find('p').text(errorMsg);
+					}
+					$error.show();
+				} else {
+					// Same listing already reported the error above - avoid duplicates.
+					$container.hide();
 				}
 			});
 		},
@@ -762,47 +765,6 @@
 					if (response.success && response.data) {
 						// Pass full response data including numberOfResults
 						ATDWLive.displayProducts(response.data, $container);
-					} else {
-						var errorMsg = response.data && response.data.message ? response.data.message : atdwLive.strings.error;
-						$error.find('p').text(errorMsg);
-						$error.show();
-						console.error('ATDW API Error:', response);
-					}
-				},
-				error: function(xhr, status, error) {
-					$loading.hide();
-					$error.show();
-					console.error('AJAX Error:', status, error);
-				}
-			});
-		},
-
-		/**
-		 * Fetch single product from API
-		 */
-		fetchSingleProduct: function(endpoint, params, $container) {
-			var $loading = $container.find('.atdw-live-loading');
-			var $product = $container.find('.atdw-live-single-product');
-			var $error = $container.find('.atdw-live-error');
-
-			$loading.show();
-			$product.empty();
-			$error.hide();
-
-			$.ajax({
-				url: atdwLive.ajaxUrl,
-				type: 'POST',
-				data: {
-					action: 'atdw_live_fetch',
-					nonce: atdwLive.nonce,
-					endpoint: endpoint,
-					params: params
-				},
-				success: function(response) {
-					$loading.hide();
-
-					if (response.success && response.data) {
-						ATDWLive.displaySingleProduct(response.data, $product);
 					} else {
 						var errorMsg = response.data && response.data.message ? response.data.message : atdwLive.strings.error;
 						$error.find('p').text(errorMsg);

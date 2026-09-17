@@ -96,8 +96,18 @@ class ATDW_Live_API_Proxy {
 		$result = $this->make_request( $endpoint, $params );
 
 		if ( is_wp_error( $result ) ) {
+			$message    = $result->get_error_message();
+			$error_data = $result->get_error_data();
+			$status     = is_array( $error_data ) && isset( $error_data['status'] ) ? (int) $error_data['status'] : 0;
+
+			// A 404 on a single-listing lookup means the listing has been removed
+			// from ATDW - show that instead of the raw HTTP status code.
+			if ( 404 === $status && '/product' === $endpoint ) {
+				$message = __( 'This listing is no longer available', 'atdw-live-products' );
+			}
+
 			wp_send_json_error( array(
-				'message' => $result->get_error_message(),
+				'message' => $message,
 				'code' => $result->get_error_code(),
 				'endpoint' => $endpoint,
 				'params' => $params

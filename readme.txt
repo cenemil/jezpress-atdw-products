@@ -4,7 +4,7 @@ Tags: atdw, tourism, products, api, caching
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.0.1
+Stable tag: 4.0.2
 License: Proprietary
 
 Display Australian tourism products from ATDW API with server-side caching and stale-while-revalidate fallback.
@@ -25,6 +25,11 @@ Features:
 * Automatic updates via JezPress
 
 == Changelog ==
+
+= 4.0.2 =
+* Fixed duplicate "error loading" messages when a page has several `atdw_live_meta`/`atdw_live_product` shortcodes for the same listing ID and that listing can't be loaded from ATDW — only the first shortcode on the page now shows the error, the rest are hidden instead of repeating it
+* `atdw_live_product` now shares the same per-listing fetch/cache as `atdw_live_meta`, so pages combining both only make one API request per listing
+* A 404 on a single-listing lookup now shows "This listing is no longer available" instead of the raw "API returned error code: 404"
 
 = 4.0.1 =
 * Published as a new JezPress catalogue entry under the `jezpress-atdw-products` slug (was `atdw-live-products`)

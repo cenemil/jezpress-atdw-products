@@ -102,6 +102,11 @@ Jezpress ATDW Products provides a modern, client-side approach to displaying tou
 
 ## Version History
 
+### 4.0.2
+- Fixed duplicate "error loading" messages when a page combines several `atdw_live_meta`/`atdw_live_product` shortcodes for the same listing ID and that listing can't be loaded from ATDW — only the first shortcode on the page shows the error now, the rest are hidden instead of repeating it
+- `atdw_live_product` now shares the same per-listing fetch/cache as `atdw_live_meta`, so a page combining both only makes one API request per listing
+- A 404 on a single-listing lookup now shows "This listing is no longer available" instead of the raw "API returned error code: 404"
+
 ### 4.0.1
 - Published as a new JezPress catalogue entry under the `jezpress-atdw-products` slug (was `atdw-live-products`)
 - Renamed the main plugin file and all internal `atdw-live-*`/`class-jezweb-*` class files to a consistent `jatdwp` naming (e.g. `class-jatdwp-admin.php`, `class-jatdwp-updater.php`, `class-jatdwp-license.php`, `public/assets/js/jatdwp.js`) — no functional changes
